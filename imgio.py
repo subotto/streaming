@@ -55,21 +55,22 @@ def write_frame(fout, image):
     fout.write(imdata)
 
 def get_cairo_context(image):
-    width, height, channels = image.shape
+    height, width, channels = image.shape
+    size = (width, height)
     assert channels == 4
     surf = cairo.ImageSurface.create_for_data(image.data, cairo.FORMAT_RGB24, width, height)
     ctx = cairo.Context(surf)
 
     # Set up a reasonable coordinate system
-    size = (width, height)
-    versor_len = 0.7 * min(size)
-    reflect = cairo.Matrix(1.0, 0.0, 0.0, -1.0, 0.0, 0.0)
-    ctx.transform(reflect)
-    ctx.translate(size[0]/2, -size[1]/2)
-    ctx.scale(versor_len, versor_len)
+    #versor_len = 0.7 * min(size)
+    #reflect = cairo.Matrix(1.0, 0.0, 0.0, -1.0, 0.0, 0.0)
+    #ctx.transform(reflect)
+    #ctx.translate(size[0]/2, -size[1]/2)
+    #ctx.scale(versor_len, versor_len)
 
-    ctx.set_line_width(1.5 / versor_len)
-    ctx.set_line_join(cairo.LINE_JOIN_ROUND)
-    ctx.set_line_cap(cairo.LINE_CAP_ROUND)
+    # Setup reasonable drawing tools
+    #ctx.set_line_width(1.5 / versor_len)
+    #ctx.set_line_join(cairo.LINE_JOIN_ROUND)
+    #ctx.set_line_cap(cairo.LINE_CAP_ROUND)
 
-    return ctx, size
+    return ctx, size, surf

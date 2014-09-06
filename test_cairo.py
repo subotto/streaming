@@ -9,7 +9,7 @@ WIDTH, HEIGHT = 640, 480
 surface = cairo.ImageSurface (cairo.FORMAT_ARGB32, WIDTH, HEIGHT)
 ctx = cairo.Context (surface)
 
-#ctx.scale (WIDTH/4, HEIGHT/3) # Normalizing the canvas
+ctx.scale (WIDTH/4, HEIGHT/3) # Normalizing the canvas
 
 """
 pat = cairo.LinearGradient (0.0, 0.0, 0.0, 1.0)
@@ -50,7 +50,7 @@ ctx.move_to(0,0);
 h = rsvg.Handle("immagine2.svg")
 #s = cairo.ImageSurface(cairo.FORMAT_ARGB32, 100, 100) 
 #ctx = cairo.Context(s)
-h.render_cairo(ctx)
+#h.render_cairo(ctx)
 
 
 
