@@ -17,7 +17,7 @@ def main():
     try:
         while True:
             sys.stdout.write(content)
-            print >> sys.stderr, num
+            #print >> sys.stderr, num
             num += 1
     except KeyboardInterrupt:
         pass

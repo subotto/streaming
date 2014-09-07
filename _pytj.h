@@ -7,11 +7,22 @@ typedef struct {
   tjhandle tj_dec;
 } TJContext;
 
+typedef struct {
+  void *buf;
+  unsigned int width;
+  unsigned int height;
+} DecodeRes;
+
+typedef struct {
+  void *buf;
+  unsigned int len;
+} EncodeRes;
+
 TJContext *create_tjcontext(void);
 void free_tjcontext(TJContext *ctx);
-void *encode_image(TJContext *ctx, void *buf, unsigned int width, unsigned int height, unsigned int *res_len, int quality);
+EncodeRes encode_image(TJContext *ctx, unsigned long _buf, unsigned int width, unsigned int height, int quality);
 void free_encoded_image(void *buf);
-void *decode_image(TJContext *ctx, void *buf, unsigned long len, unsigned int *res_width, unsigned int *res_height);
+DecodeRes decode_image(TJContext *ctx, char *buf, unsigned long len);
 void free_decoded_image(void *buf);
 
 #endif

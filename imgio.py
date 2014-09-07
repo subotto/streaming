@@ -34,10 +34,37 @@ def cv2_open_from_data(data):
 
 def cv2_write_to_data(image):
     #params = [cv.CV_IMWRITE_JPEG_QUALITY, 50, cv.CV_IMWRITE_PNG_COMPRESSION, 0]
-    return cv2.imencode("image.png", image)[1].data
+    return cv2.imencode("image.jpeg", image)[1].data
+
+# The PyTJ interface is terrible, but it is the best I could come up
+# with, considered that I don't want to spend on it more time then
+# strictly necessary; please, don't reuse it on serious things
+
+import pytj
+tj_ctx = pytj.create_tjcontext()
+
+def tj_open_from_data(data):
+    res = pytj.decode_image(tj_ctx, data, len(data))
+    as_str = pytj.cdata(res.buf, res.width * res.height * 4)
+    pytj.free_decoded_image(res.buf)
+    image = numpy.ndarray(shape=(res.height, res.width, 4), dtype='uint8', buffer=as_str)
+    image = numpy.copy(image)
+    #print >> sys.stderr, image.__array_interface__
+
+    return image
+
+def tj_write_to_data(image):
+    height, width, channels = image.shape
+    #print >> sys.stderr, image.__array_interface__
+    res = pytj.encode_image(tj_ctx, image.__array_interface__['data'][0], width, height, 75)
+    as_str = pytj.cdata(res.buf, res.len)
+    pytj.free_encoded_image(res.buf)
+
+    return as_str
 
 #jpeg_interface = [pil_open_from_data, pil_write_to_data]
-jpeg_interface = [cv2_open_from_data, cv2_write_to_data]
+#jpeg_interface = [cv2_open_from_data, cv2_write_to_data]
+jpeg_interface = [tj_open_from_data, tj_write_to_data]
 
 def read_frame(fin):
     length_tag = fin.read(4)
