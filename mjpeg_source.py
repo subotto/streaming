@@ -20,6 +20,7 @@ TAG_WITHOUT_LENGTH = ['\xff\xd8',
                       '\xff\xd9',
                   ]
 
+# See https://stackoverflow.com/questions/1557071/the-size-of-a-jpegjfif-image for information
 def read_jpeg(fin):
     data = []
 
