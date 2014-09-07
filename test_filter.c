@@ -106,7 +106,7 @@ void edit_frame(Image *image) {
   cairo_set_line_cap(image->ctx, CAIRO_LINE_CAP_ROUND);
 
   cairo_move_to(image->ctx, 0.0, 0.0);
-  cairo_line_to(image->ctx, 1.0, 1.0);
+  cairo_line_to(image->ctx, 0.5, 0.5);
   cairo_stroke(image->ctx);
 
 }
@@ -117,10 +117,10 @@ int main() {
 
   while (1) {
     Image *image = read_frame(stdin);
-    write_frame(stdout, image);
     setup_cairo(image);
     edit_frame(image);
     cairo_surface_flush(image->surf);
+    write_frame(stdout, image);
     free_image(image);
   }
 
