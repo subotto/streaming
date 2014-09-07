@@ -2,6 +2,8 @@
 #ifndef _PYTJ_H
 #define _PYTJ_H
 
+#include <turbojpeg.h>
+
 typedef struct {
   tjhandle tj_enc;
   tjhandle tj_dec;

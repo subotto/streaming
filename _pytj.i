@@ -4,8 +4,6 @@
 
 %{
 
-#include <turbojpeg.h>
-
 #include "_pytj.h"
 
 %}

@@ -1,7 +1,6 @@
 
 #include <stdlib.h>
 #include <strings.h>
-#include <turbojpeg.h>
 
 #include "_pytj.h"
 
