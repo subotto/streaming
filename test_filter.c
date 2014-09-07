@@ -1,10 +1,10 @@
 
-#include <turbojpeg.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <assert.h>
 #include <cairo.h>
+#include <turbojpeg.h>
 
 typedef struct {
   unsigned char *buf;
