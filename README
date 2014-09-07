@@ -1,0 +1,18 @@
+
+== INSTALLATION ==
+
+You'll have to install:
+
+  apt-get install python-dev libturbojpeg1-dev swig build-essential libcairo2-dev python-cairo python-rsvg pv
+
+Then use "make" to compile everything and enjoy!
+
+== TEST COMMAND LINE ==
+
+  ./repeater.py monoscopio-ridottissimo.jpeg | ./test_filter.py | pv | ./dump_to_files.py jpeg
+
+== MISC ==
+
+The sheep is taken here:
+
+  http://pixabay.com/en/sheep-animal-farm-agriculture-cute-161630/
