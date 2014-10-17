@@ -82,6 +82,28 @@ def write_frame(fout, image, **kwargs):
     fout.write(length_tag)
     fout.write(imdata)
 
+# Read a RAW frame, which is assumed to be RGBA and of known size
+def read_raw_frame(fin, width, height):
+    length = width * height * 4
+    imdata = fin.read(length)
+    image = numpy.ndarray(shape=(height, width, 4), dtype='uint8', buffer=imdata)
+    image = numpy.copy(image)
+    return image
+
+def get_cairo_image(image):
+    height, width, channels = image.shape
+    size = (width, height)
+    assert channels == 4
+    surf = cairo.ImageSurface.create_for_data(image.data, cairo.FORMAT_ARGB32, width, height)
+
+    return size, surf
+
+def swap_channels(image):
+    """Swap R and B channels.
+
+    """
+    return numpy.dstack([image[:,:,2], image[:,:,1], image[:,:,1], image[:,:,3]])
+
 def get_cairo_context(image):
     height, width, channels = image.shape
     size = (width, height)
