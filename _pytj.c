@@ -22,8 +22,8 @@ void free_tjcontext(TJContext *ctx) {
 
 }
 
-// The buffer is assumed to be width * height * 4 (with channels RGBX)
-EncodeRes encode_image(TJContext *ctx, unsigned long _buf, unsigned int width, unsigned int height, int quality) {
+// The buffer is assumed to be width * height * 4
+EncodeRes encode_image(TJContext *ctx, unsigned long _buf, unsigned int width, unsigned int height, int pixel_format, int subsamp, int quality, int flags) {
 
   unsigned long length;
   unsigned char *buf = (unsigned char*) _buf;
@@ -32,7 +32,7 @@ EncodeRes encode_image(TJContext *ctx, unsigned long _buf, unsigned int width, u
   EncodeRes res;
   bzero(&res, sizeof(EncodeRes));
 
-  tjCompress2(ctx->tj_enc, buf, width, 0, height, TJPF_RGBX, &outbuf, &length, TJSAMP_444, quality, TJFLAG_FASTDCT);
+  tjCompress2(ctx->tj_enc, buf, width, 0, height, pixel_format, &outbuf, &length, subsamp, quality, flags);
   res.len = length;
   res.buf = outbuf;
 
@@ -46,7 +46,7 @@ void free_encoded_image(void *buf) {
 
 }
 
-DecodeRes decode_image(TJContext *ctx, char *buf, unsigned long len) {
+DecodeRes decode_image(TJContext *ctx, char *buf, unsigned long len, int pixel_format, int flags) {
 
   int width;
   int height;
@@ -58,7 +58,7 @@ DecodeRes decode_image(TJContext *ctx, char *buf, unsigned long len) {
 
   tjDecompressHeader2(ctx->tj_dec, buf, len, &width, &height, &subsamp);
   outbuf = malloc(width * height * 4);
-  tjDecompress2(ctx->tj_dec, buf, len, outbuf, width, 0, height,  TJPF_RGBX, TJFLAG_FASTDCT);
+  tjDecompress2(ctx->tj_dec, buf, len, outbuf, width, 0, height, pixel_format, flags);
   res.width = width;
   res.height = height;
   res.buf = outbuf;

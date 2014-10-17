@@ -41,10 +41,11 @@ def cv2_write_to_data(image):
 # strictly necessary; please, don't reuse it on serious things
 
 import pytj
+from pytj import TJPF_RGBX, TJPF_BGRX
 tj_ctx = pytj.create_tjcontext()
 
-def tj_open_from_data(data):
-    res = pytj.decode_image(tj_ctx, data, len(data))
+def tj_open_from_data(data, pixel_format=TJPF_RGBX):
+    res = pytj.decode_image(tj_ctx, data, len(data), pixel_format, pytj.TJFLAG_FASTDCT)
     as_str = pytj.cdata(res.buf, res.width * res.height * 4)
     pytj.free_decoded_image(res.buf)
     image = numpy.ndarray(shape=(res.height, res.width, 4), dtype='uint8', buffer=as_str)
@@ -53,10 +54,10 @@ def tj_open_from_data(data):
 
     return image
 
-def tj_write_to_data(image):
+def tj_write_to_data(image, pixel_format=TJPF_RGBX):
     height, width, channels = image.shape
     #print >> sys.stderr, image.__array_interface__
-    res = pytj.encode_image(tj_ctx, image.__array_interface__['data'][0], width, height, 75)
+    res = pytj.encode_image(tj_ctx, image.__array_interface__['data'][0], width, height, pixel_format, pytj.TJSAMP_444, 75, pytj.TJFLAG_FASTDCT)
     as_str = pytj.cdata(res.buf, res.len)
     pytj.free_encoded_image(res.buf)
 
@@ -66,16 +67,16 @@ def tj_write_to_data(image):
 #jpeg_interface = [cv2_open_from_data, cv2_write_to_data]
 jpeg_interface = [tj_open_from_data, tj_write_to_data]
 
-def read_frame(fin):
+def read_frame(fin, **kwargs):
     length_tag = fin.read(4)
     length, = struct.unpack("!I", length_tag)
     imdata = fin.read(length)
-    image = jpeg_interface[0](imdata)
+    image = jpeg_interface[0](imdata, **kwargs)
 
     return image
 
-def write_frame(fout, image):
-    imdata = jpeg_interface[1](image)
+def write_frame(fout, image, **kwargs):
+    imdata = jpeg_interface[1](image, **kwargs)
     length = len(imdata)
     length_tag = struct.pack("!I", length)
     fout.write(length_tag)

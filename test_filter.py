@@ -8,7 +8,7 @@ import cairo
 import rsvg
 import math
 
-from imgio import read_frame, write_frame, get_cairo_context
+from imgio import read_frame, write_frame, get_cairo_context, TJPF_BGRX
 
 sheep_svg = rsvg.Handle("pecora.svg")
 
@@ -34,12 +34,12 @@ def main():
     num = 0
     try:
         while True:
-            image = read_frame(sys.stdin)
+            image = read_frame(sys.stdin, pixel_format=TJPF_BGRX)
             #print >> sys.stderr, image.shape
             ctx, size, surf = get_cairo_context(image)
             edit_frame(ctx, size, num)
             surf.flush()
-            write_frame(sys.stdout, image)
+            write_frame(sys.stdout, image, pixel_format=TJPF_BGRX)
             num += 1
     except KeyboardInterrupt:
         pass
