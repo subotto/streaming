@@ -5,7 +5,7 @@ var isPageLoaded=false;
 
 
 page.viewportSize = { width: 1280, height: 720 };
-page.open('images/4gears.svg', function() {
+page.open('images/soccer.svg', function() {
     t=0;
     
     /*
@@ -19,11 +19,15 @@ page.open('images/4gears.svg', function() {
     */    
     
     interval = setInterval(function(){
-	page.render('/dev/stdout',{format: 'raw'});
-	system.stderr.write(' '+t++);
-	//if (t>400) {phantom.exit();}
+	page.render('/dev/stdout',{format: 'render-only'});
+        t++;
+	//system.stderr.write(' '+t++);
+	if (t>400) {phantom.exit();}
     }, 10);
     
+    interval2 = setInterval(function(){
+        system.stderr.write(' '+t);
+    }, 1000);
 });
 
 
