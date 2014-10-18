@@ -5,7 +5,7 @@ var isPageLoaded=false;
 
 
 page.viewportSize = { width: 1280, height: 720 };
-page.open('images/soccer.svg', function() {
+page.open('images/4gears-no-css.svg', function() {
     t=0;
     
     /*
@@ -19,7 +19,7 @@ page.open('images/soccer.svg', function() {
     */    
     
     interval = setInterval(function(){
-	page.render('/dev/stdout',{format: 'render-only'});
+	page.render('/dev/null',{format: 'render-only'});
         t++;
 	//system.stderr.write(' '+t++);
 	if (t>400) {phantom.exit();}
