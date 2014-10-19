@@ -7,8 +7,21 @@ import StringIO
 import cairo
 import rsvg
 import math
+import time
 
 from imgio import read_frame, write_frame, get_cairo_context, TJPF_BGRX
+
+class Clock:
+
+    def __init__(self):
+        self.time = time.time()
+
+    def tic(self, desc=""):
+        new_time = time.time()
+        print >> sys.stderr, "> TIC! %f (%s)" % (new_time - self.time, desc)
+        self.time = new_time
+
+clock = Clock()
 
 class RasterSVGFromStream:
 
@@ -18,7 +31,9 @@ class RasterSVGFromStream:
     def process_frame(self, ctx, size, num):
         length = int(self.fin.readline().strip())
         svg_data = self.fin.read(length + 1)
+        clock.tic('SVG read')
         svg_handle = rsvg.Handle(data=svg_data)
+        clock.tic('SVG handle created')
 
         ctx.save()
         ctx.identity_matrix()
@@ -51,13 +66,20 @@ def main():
     rsfs = RasterSVGFromStream(fin)
     try:
         while True:
+            clock.tic('new cycle')
             image = read_frame(sys.stdin, pixel_format=TJPF_BGRX)
+            clock.tic('frame read')
             #print >> sys.stderr, image.shape
             ctx, size, surf = get_cairo_context(image)
+            clock.tic('cairo context created')
             #edit_frame(ctx, size, num)
             rsfs.process_frame(ctx, size, num)
+            clock.tic('SVG rendered')
             surf.flush()
+            clock.tic('surface flushed')
             write_frame(sys.stdout, image, pixel_format=TJPF_BGRX)
+            clock.tic('frame written')
+            clock.tic('cycle finished')
             num += 1
     except KeyboardInterrupt:
         pass
