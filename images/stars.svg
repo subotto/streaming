@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="windows-1252" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" width="640" height="300" viewBox="0 0 640 300" onload="">
+	
+	<!-- Matthew Bystedt http://apike.ca 2012 -->
+	
+	<!-- Pattern Definition -->
+	<defs>
+		<pattern id="checkerPattern" patternUnits="userSpaceOnUse" x="0" y="0" width="20" height="20" viewBox="0 0 10 10">
+				
+			<rect x="0" y="0" width="5" height="5" fill="lightblue"/>
+			<rect x="5" y="5" width="5" height="5" fill="lightblue"/>
+		</pattern> 
+		
+		<linearGradient id="groundGrad" r="100%" spreadMethod="reflect">
+            <stop offset="5%" stop-color="#323c21"/>
+            <stop offset="95%" stop-color="#484b43"/>
+        </linearGradient>
+        
+        <radialGradient id="skyGrad" r="100%" fy="70%" spreadMethod="reflect">
+            <stop offset="5%" stop-color="#2d385b"/>
+            <stop offset="95%" stop-color="#111522"/>
+        </radialGradient>
+        
+		<polygon id="star" points="100,10 40,180 190,60 10,60 160,180 100,10" stroke-width="4"/>
+		
+<script type="text/ecmascript"><![CDATA[
+
+var xmlns = "http://www.w3.org/2000/svg";
+var xlinkns = "http://www.w3.org/1999/xlink";
+var timer = null;
+var timerInterval = 50;
+var opacityDecrease = .01;
+var count = 0;
+var starAddFreq = 2;
+var opacityDecFreq = 1;
+
+
+    function decreaseOpacity() {
+    	var starGroup = document.getElementById("starGroup");
+    	var i = 0;
+    	var delArray = new Array();
+    	for (; i < starGroup.childNodes.length; i++) {
+    		var opacity = starGroup.childNodes[i].getAttributeNS(null, "opacity") - opacityDecrease;
+    		if (opacity <= 0) {
+    			delArray.push(starGroup.childNodes[i]);
+    		} else {
+    			starGroup.childNodes[i].setAttributeNS(null, "opacity", opacity);
+    		}
+    	}
+    	
+    	for (i = 0; i < delArray.length; i++) {
+    		starGroup.removeChild(delArray[i]);
+    	}
+    }
+    
+    function randomColor() {
+    	return '#'+Math.floor(Math.random()*16777215).toString(16);
+    }
+    
+    function randomPos(low, high) {
+    	return Math.floor(Math.random()* (high-low)) + low;
+    }
+    
+    function addElement() {
+    	var starGroup = document.getElementById("starGroup");
+    	
+    	var useElem = document.createElementNS(xmlns, "use");
+    	
+    	useElem.setAttributeNS(null, "x", randomPos(-800,6800));
+    	useElem.setAttributeNS(null, "y", randomPos(-700,3300));
+    	useElem.setAttributeNS(null, "transform", "scale(.1)");
+    	
+    	useElem.setAttributeNS(null, "fill", randomColor());
+    	useElem.setAttributeNS(null, "stroke", randomColor());
+    	useElem.setAttributeNS(null, "opacity", 1);
+
+    	useElem.setAttributeNS(xlinkns, "xlink:href", "#star");
+    	
+    	starGroup.appendChild(useElem);
+    }
+    
+    function doStars() {
+    	if (timer != null) {
+    		count++;
+    		
+    		if ((count % opacityDecFreq) == 0) {
+				decreaseOpacity();
+			}
+			if ((count % starAddFreq) == 0) {
+				addElement();
+			}
+			
+			timer = setTimeout(doStars, timerInterval);
+    	}
+    }
+    
+    function startStopStars() {
+    	if (timer != null) {
+    		timer = null;
+    		return;
+    	}
+    	
+    	timer = setTimeout(doStars, timerInterval);
+    }
+
+    startStopStars();
+]]></script>
+		
+	</defs>
+
+	<!-- Background -->
+	<rect x="0" y="0" width="100%" height="100%" fill="url(#skyGrad)"/>
+	
+	<g id="starGroup"><use x="624" y="2486" transform="scale(.1)" fill="#620519" stroke="#f4a1e7" opacity="0.019999999999999248" xlink:href="#star"/><use x="4970" y="-422" transform="scale(.1)" fill="#f43877" stroke="#7885ea" opacity="0.03999999999999925" xlink:href="#star"/><use x="3356" y="2622" transform="scale(.1)" fill="#b6e0c7" stroke="#77756f" opacity="0.059999999999999255" xlink:href="#star"/><use x="5361" y="-46" transform="scale(.1)" fill="#39d76c" stroke="#e7afb5" opacity="0.07999999999999925" xlink:href="#star"/><use x="4362" y="144" transform="scale(.1)" fill="#9b3787" stroke="#f5800f" opacity="0.09999999999999924" xlink:href="#star"/><use x="5947" y="-267" transform="scale(.1)" fill="#bb50cd" stroke="#bdbbf2" opacity="0.11999999999999923" xlink:href="#star"/><use x="3992" y="-149" transform="scale(.1)" fill="#7f3914" stroke="#3b8456" opacity="0.13999999999999924" xlink:href="#star"/><use x="-274" y="-625" transform="scale(.1)" fill="#a906c5" stroke="#306463" opacity="0.15999999999999925" xlink:href="#star"/><use x="518" y="96" transform="scale(.1)" fill="#e3fe16" stroke="#d72770" opacity="0.17999999999999927" xlink:href="#star"/><use x="5802" y="838" transform="scale(.1)" fill="#623b13" stroke="#230054" opacity="0.1999999999999993" xlink:href="#star"/><use x="6131" y="551" transform="scale(.1)" fill="#d0a278" stroke="#25dc00" opacity="0.2199999999999993" xlink:href="#star"/><use x="3190" y="3093" transform="scale(.1)" fill="#75235f" stroke="#f9f96e" opacity="0.23999999999999932" xlink:href="#star"/><use x="3576" y="2771" transform="scale(.1)" fill="#293b5" stroke="#3420e6" opacity="0.25999999999999934" xlink:href="#star"/><use x="-638" y="1654" transform="scale(.1)" fill="#cb187" stroke="#751481" opacity="0.27999999999999936" xlink:href="#star"/><use x="2196" y="3249" transform="scale(.1)" fill="#e1321" stroke="#2a1414" opacity="0.2999999999999994" xlink:href="#star"/><use x="1879" y="2350" transform="scale(.1)" fill="#a10ff0" stroke="#ed8e55" opacity="0.3199999999999994" xlink:href="#star"/><use x="4504" y="-306" transform="scale(.1)" fill="#e3ec44" stroke="#42595f" opacity="0.3399999999999994" xlink:href="#star"/><use x="5348" y="518" transform="scale(.1)" fill="#ffd1d7" stroke="#950c7d" opacity="0.35999999999999943" xlink:href="#star"/><use x="273" y="195" transform="scale(.1)" fill="#715f28" stroke="#88554c" opacity="0.37999999999999945" xlink:href="#star"/><use x="1464" y="1828" transform="scale(.1)" fill="#d7a3" stroke="#926225" opacity="0.39999999999999947" xlink:href="#star"/><use x="642" y="2015" transform="scale(.1)" fill="#4f3ea0" stroke="#dabbe0" opacity="0.4199999999999995" xlink:href="#star"/><use x="6584" y="1959" transform="scale(.1)" fill="#7ce72b" stroke="#1928e2" opacity="0.4399999999999995" xlink:href="#star"/><use x="5037" y="-316" transform="scale(.1)" fill="#b542a1" stroke="#ef7375" opacity="0.4599999999999995" xlink:href="#star"/><use x="4375" y="3298" transform="scale(.1)" fill="#5af815" stroke="#d92d81" opacity="0.47999999999999954" xlink:href="#star"/><use x="810" y="3118" transform="scale(.1)" fill="#268e91" stroke="#55cb83" opacity="0.49999999999999956" xlink:href="#star"/><use x="-618" y="-107" transform="scale(.1)" fill="#c9341a" stroke="#62b0dc" opacity="0.5199999999999996" xlink:href="#star"/><use x="6185" y="-546" transform="scale(.1)" fill="#8c6b92" stroke="#b40773" opacity="0.5399999999999996" xlink:href="#star"/><use x="-713" y="2850" transform="scale(.1)" fill="#f6ab5a" stroke="#5c7ca1" opacity="0.5599999999999996" xlink:href="#star"/><use x="1821" y="1309" transform="scale(.1)" fill="#b436d7" stroke="#bd3d71" opacity="0.5799999999999996" xlink:href="#star"/><use x="3871" y="-617" transform="scale(.1)" fill="#e2bcb0" stroke="#a8cc2c" opacity="0.5999999999999996" xlink:href="#star"/><use x="981" y="1164" transform="scale(.1)" fill="#6583f3" stroke="#9c8939" opacity="0.6199999999999997" xlink:href="#star"/><use x="4662" y="-294" transform="scale(.1)" fill="#1731fa" stroke="#d6094e" opacity="0.6399999999999997" xlink:href="#star"/><use x="1009" y="581" transform="scale(.1)" fill="#857327" stroke="#d292eb" opacity="0.6599999999999997" xlink:href="#star"/><use x="1095" y="2995" transform="scale(.1)" fill="#62106f" stroke="#785d27" opacity="0.6799999999999997" xlink:href="#star"/><use x="1513" y="-55" transform="scale(.1)" fill="#fc3bb3" stroke="#c269d4" opacity="0.6999999999999997" xlink:href="#star"/><use x="2945" y="2600" transform="scale(.1)" fill="#e41ced" stroke="#4914ea" opacity="0.7199999999999998" xlink:href="#star"/><use x="2958" y="-546" transform="scale(.1)" fill="#51ea28" stroke="#6ab345" opacity="0.7399999999999998" xlink:href="#star"/><use x="5873" y="-280" transform="scale(.1)" fill="#9144c" stroke="#28dab7" opacity="0.7599999999999998" xlink:href="#star"/><use x="57" y="3035" transform="scale(.1)" fill="#3752b5" stroke="#82d60" opacity="0.7799999999999998" xlink:href="#star"/><use x="4836" y="-252" transform="scale(.1)" fill="#3e97a4" stroke="#61c265" opacity="0.7999999999999998" xlink:href="#star"/><use x="1461" y="1905" transform="scale(.1)" fill="#703776" stroke="#9e85e7" opacity="0.8199999999999998" xlink:href="#star"/><use x="5616" y="2477" transform="scale(.1)" fill="#7eccad" stroke="#c62a56" opacity="0.8399999999999999" xlink:href="#star"/><use x="2759" y="-514" transform="scale(.1)" fill="#d3a2cb" stroke="#a4850f" opacity="0.8599999999999999" xlink:href="#star"/><use x="4207" y="2385" transform="scale(.1)" fill="#3b200" stroke="#897046" opacity="0.8799999999999999" xlink:href="#star"/><use x="1268" y="357" transform="scale(.1)" fill="#5775a0" stroke="#508c4d" opacity="0.8999999999999999" xlink:href="#star"/><use x="4510" y="193" transform="scale(.1)" fill="#b82770" stroke="#ef7a18" opacity="0.9199999999999999" xlink:href="#star"/><use x="6222" y="2960" transform="scale(.1)" fill="#5c29c1" stroke="#426927" opacity="0.94" xlink:href="#star"/><use x="2292" y="-107" transform="scale(.1)" fill="#3baa58" stroke="#3012aa" opacity="0.96" xlink:href="#star"/><use x="-139" y="766" transform="scale(.1)" fill="#adc82a" stroke="#877c06" opacity="0.98" xlink:href="#star"/><use x="2051" y="2469" transform="scale(.1)" fill="#8dc5e8" stroke="#2b1aa2" opacity="1" xlink:href="#star"/></g>
+	
+	
+	<ellipse cx="200" cy="520" rx="600" ry="300" fill="url(#groundGrad)"/>
+	<ellipse cx="500" cy="560" rx="600" ry="300" fill="url(#groundGrad)"/>
+	
+	<g onclick="startStopStars()">
+		<rect x="450" y="280" height="20" width="190" fill="green"/>
+		<text x="470" y="295">Click Here to Start/Stop</text>
+	</g>
+</svg>
