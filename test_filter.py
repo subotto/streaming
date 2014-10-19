@@ -22,6 +22,7 @@ class Clock:
         self.time = new_time
 
 clock = Clock()
+frame_clock = Clock()
 
 class RasterSVGFromStream:
 
@@ -66,6 +67,7 @@ def main():
     rsfs = RasterSVGFromStream(fin)
     try:
         while True:
+            frame_clock.tic('frame clock')
             clock.tic('new cycle')
             image = read_frame(sys.stdin, pixel_format=TJPF_BGRX)
             clock.tic('frame read')
