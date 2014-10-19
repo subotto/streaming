@@ -7,9 +7,11 @@ import StringIO
 import cairo
 import rsvg
 import math
+import time
 
 from imgio import read_frame, write_frame, get_cairo_context, TJPF_BGRX
 
+<<<<<<< HEAD
 #sheep_svg = rsvg.Handle("pecora.svg")
 
 fin = open('webpage_fifo', 'r')
@@ -33,6 +35,52 @@ def edit_frame(ctx, size, num):
  #   # ctx.move_to(0.5 - width / 2 - x_bearing, 0.5 - height / 2 - y_bearing)
  #   ctx.move_to(0.1, 0.1 - y_bearing)
  #   ctx.show_text(text)
+=======
+class Clock:
+
+    def __init__(self):
+        self.time = time.time()
+
+    def tic(self, desc=""):
+        new_time = time.time()
+        print >> sys.stderr, "> TIC! %f (%s)" % (new_time - self.time, desc)
+        self.time = new_time
+
+clock = Clock()
+frame_clock = Clock()
+
+class RasterSVGFromStream:
+
+    def __init__(self, fin):
+        self.fin = fin
+
+    def process_frame(self, ctx, size, num):
+        length = int(self.fin.readline().strip())
+        svg_data = self.fin.read(length + 1)
+        clock.tic('SVG read')
+        svg_handle = rsvg.Handle(data=svg_data)
+        clock.tic('SVG handle created')
+
+        ctx.save()
+        ctx.identity_matrix()
+        svg_handle.render_cairo(ctx)
+        ctx.restore()
+
+def edit_frame(ctx, size, num):
+    sheep_svg = rsvg.Handle("pecora.svg")
+
+    ctx.scale (size[0]/4, size[1]/3)
+    ctx.set_source_rgb(0.0, 1.0, 0.0)
+    ctx.select_font_face("Ubuntu Medium",
+                         cairo.FONT_SLANT_NORMAL,
+                         cairo.FONT_WEIGHT_NORMAL)
+    ctx.set_font_size(0.12)
+    text = "MATEMATICI 1874 1110 FISICI"
+    x_bearing, y_bearing, width, height = ctx.text_extents(text)[:4]
+    # ctx.move_to(0.5 - width / 2 - x_bearing, 0.5 - height / 2 - y_bearing)
+    ctx.move_to(0.1, 0.1 - y_bearing)
+    ctx.show_text(text)
+>>>>>>> 9ff244b537f357bbba209fe6cf5a879bb28d89ee
 
     ctx.move_to(0.1, 0.1)
     ctx.identity_matrix()
@@ -51,14 +99,25 @@ def edit_frame(ctx, size, num):
 
 def main():
     num = 0
+    fin = open('webpage_fifo')
+    rsfs = RasterSVGFromStream(fin)
     try:
         while True:
+            frame_clock.tic('frame clock')
+            clock.tic('new cycle')
             image = read_frame(sys.stdin, pixel_format=TJPF_BGRX)
+            clock.tic('frame read')
             #print >> sys.stderr, image.shape
             ctx, size, surf = get_cairo_context(image)
-            edit_frame(ctx, size, num)
+            clock.tic('cairo context created')
+            #edit_frame(ctx, size, num)
+            rsfs.process_frame(ctx, size, num)
+            clock.tic('SVG rendered')
             surf.flush()
+            clock.tic('surface flushed')
             write_frame(sys.stdout, image, pixel_format=TJPF_BGRX)
+            clock.tic('frame written')
+            clock.tic('cycle finished')
             num += 1
     except KeyboardInterrupt:
         pass
