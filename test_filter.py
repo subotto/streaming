@@ -10,9 +10,24 @@ import math
 
 from imgio import read_frame, write_frame, get_cairo_context, TJPF_BGRX
 
-sheep_svg = rsvg.Handle("pecora.svg")
+class RasterSVGFromStream:
+
+    def __init__(self, fin):
+        self.fin = fin
+
+    def process_frame(self, ctx, size, num):
+        length = int(self.fin.readline().strip())
+        svg_data = self.fin.read(length + 1)
+        svg_handle = rsvg.Handle(data=svg_data)
+
+        ctx.save()
+        ctx.identity_matrix()
+        svg_handle.render_cairo(ctx)
+        ctx.restore()
 
 def edit_frame(ctx, size, num):
+    sheep_svg = rsvg.Handle("pecora.svg")
+
     ctx.scale (size[0]/4, size[1]/3)
     ctx.set_source_rgb(0.0, 1.0, 0.0)
     ctx.select_font_face("Ubuntu Medium",
@@ -32,12 +47,15 @@ def edit_frame(ctx, size, num):
 
 def main():
     num = 0
+    fin = open('webpage_fifo')
+    rsfs = RasterSVGFromStream(fin)
     try:
         while True:
             image = read_frame(sys.stdin, pixel_format=TJPF_BGRX)
             #print >> sys.stderr, image.shape
             ctx, size, surf = get_cairo_context(image)
-            edit_frame(ctx, size, num)
+            #edit_frame(ctx, size, num)
+            rsfs.process_frame(ctx, size, num)
             surf.flush()
             write_frame(sys.stdout, image, pixel_format=TJPF_BGRX)
             num += 1
