@@ -1,0 +1,25 @@
+body {
+    
+}
+
+#score-bar {
+    position: absolute;
+    left: 30px;
+    top: 20px;
+    
+    background-color: lightgrey;
+}
+
+.text-white {
+    font-weight: bold;
+    font-family: mono;
+    font-size: 17px;
+    color: white;
+}
+
+.text-black {
+    font-weight: bold;
+    font-family: mono;
+    font-size: 17px;
+    color: black;
+}
