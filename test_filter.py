@@ -59,22 +59,23 @@ def edit_frame(ctx, size, num):
     ctx.move_to(0.1, 0.1)
     ctx.identity_matrix()
  
- #   ctx.translate(2.0 * num, 350.0 + 50.0 * math.cos(2 * math.pi * num / 200.0))
- #   ctx.scale(0.25, 0.25)
+    ctx.translate(2.0 * num, 350.0 + 50.0 * math.cos(2 * math.pi * num / 200.0))
+    ctx.scale(0.25, 0.25)
     
-    svg_code=read_svg_frame()
+    #svg_code=read_svg_frame()
     #print >> sys.stderr, svg_code
-    svg_handle = rsvg.Handle(data=svg_code)
+    #svg_handle = rsvg.Handle(data=svg_code)
     #svg_handle.write(buffer=svg_code)
     
     #svg_handle = rsvg.Handle('images/4gears.svg')
     
-    svg_handle.render_cairo(ctx)
+    #svg_handle.render_cairo(ctx)
+    sheep_svg.render_cairo(ctx)
 
 def main():
     num = 0
-    fin = open('webpage_fifo')
-    rsfs = RasterSVGFromStream(fin)
+    #fin = open('webpage_fifo')
+    #rsfs = RasterSVGFromStream(fin)
     try:
         while True:
             frame_clock.tic('frame clock')
@@ -84,8 +85,8 @@ def main():
             #print >> sys.stderr, image.shape
             ctx, size, surf = get_cairo_context(image)
             clock.tic('cairo context created')
-            #edit_frame(ctx, size, num)
-            rsfs.process_frame(ctx, size, num)
+            edit_frame(ctx, size, num)
+            #rsfs.process_frame(ctx, size, num)
             clock.tic('SVG rendered')
             surf.flush()
             clock.tic('surface flushed')
