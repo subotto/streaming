@@ -7,7 +7,7 @@ import pygame
 import pygame.locals
 import numpy
 
-from imgio import read_frame, write_frame
+from imgio import read_frame
 
 def main():
     # Init PyGame

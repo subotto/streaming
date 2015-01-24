@@ -57,7 +57,7 @@ def tj_open_from_data(data, pixel_format=TJPF_RGBX):
 def tj_write_to_data(image, pixel_format=TJPF_RGBX):
     height, width, channels = image.shape
     #print >> sys.stderr, image.__array_interface__
-    res = pytj.encode_image(tj_ctx, image.__array_interface__['data'][0], width, height, pixel_format, pytj.TJSAMP_444, 75, pytj.TJFLAG_FASTDCT)
+    res = pytj.encode_image(tj_ctx, image.__array_interface__['data'][0], width, height, pixel_format, pytj.TJSAMP_444, 95, pytj.TJFLAG_FASTDCT)
     as_str = pytj.cdata(res.buf, res.len)
     pytj.free_encoded_image(res.buf)
 
@@ -67,20 +67,28 @@ def tj_write_to_data(image, pixel_format=TJPF_RGBX):
 #jpeg_interface = [cv2_open_from_data, cv2_write_to_data]
 jpeg_interface = [tj_open_from_data, tj_write_to_data]
 
-def read_frame(fin, **kwargs):
+def read_jpeg_frame(fin):
     length_tag = fin.read(4)
     length, = struct.unpack("!I", length_tag)
     imdata = fin.read(length)
+
+    return imdata
+
+def read_frame(fin, **kwargs):
+    imdata = read_jpeg_frame(fin)
     image = jpeg_interface[0](imdata, **kwargs)
 
     return image
 
-def write_frame(fout, image, **kwargs):
-    imdata = jpeg_interface[1](image, **kwargs)
+def write_jpeg_frame(fout, imdata):
     length = len(imdata)
     length_tag = struct.pack("!I", length)
     fout.write(length_tag)
     fout.write(imdata)
+
+def write_frame(fout, image, **kwargs):
+    imdata = jpeg_interface[1](image, **kwargs)
+    write_jpeg_frame(fout, imdata)
 
 # Read a RAW frame, which is assumed to be RGBA and of known size
 def read_raw_frame(fin, width, height):

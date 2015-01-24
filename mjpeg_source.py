@@ -4,6 +4,8 @@
 import sys
 import struct
 
+from imgio import write_jpeg_frame
+
 SOI_TAG = '\xff\xd8'
 EOI_TAG = '\xff\xd9'
 SOS_TAG = '\xff\xda'
@@ -88,8 +90,7 @@ def main():
             content = read_jpeg(sys.stdin)
             if content is None:
                 break
-            content = struct.pack("!I", len(content)) + content
-            sys.stdout.write(content)
+            write_jpeg_frame(sys.stdout, content)
             print >> sys.stderr, num
             num += 1
     except KeyboardInterrupt:

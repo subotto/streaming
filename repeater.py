@@ -4,20 +4,20 @@
 import sys
 import struct
 
+from imgio import write_jpeg_frame
+
 def main():
     filename = sys.argv[1]
+    #fps = float(sys.argv[2])
 
     with open(filename) as fin:
         content = fin.read()
 
-    # Add length tag
-    content = struct.pack("!I", len(content)) + content
-
     num = 0
     try:
         while True:
-            sys.stdout.write(content)
-            print >> sys.stderr, num
+            write_jpeg_frame(sys.stdout, content)
+            #print >> sys.stderr, num
             num += 1
     except KeyboardInterrupt:
         pass

@@ -4,14 +4,14 @@
 import sys
 import struct
 
+from imgio import read_jpeg_frame
+
 def main():
     num = 0
     ext = sys.argv[1]
     try:
         while True:
-            length_tag = sys.stdin.read(4)
-            length, = struct.unpack("!I", length_tag)
-            imdata = sys.stdin.read(length)
+            imdata = read_jpeg_frame(sys.stdin)
             with open("frames/frame_%06d.%s" % (num, ext), 'w') as fout:
                 fout.write(imdata)
             num += 1

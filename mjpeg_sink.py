@@ -4,13 +4,13 @@
 import sys
 import struct
 
+from imgio import read_jpeg_frame
+
 def main():
     num = 0
     try:
         while True:
-            length_tag = sys.stdin.read(4)
-            length, = struct.unpack("!I", length_tag)
-            imdata = sys.stdin.read(length)
+            imdata = read_jpeg_frame(sys.stdin)
             if imdata == '':
                 break
             sys.stdout.write(imdata)
