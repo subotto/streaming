@@ -21,7 +21,7 @@ function output_image(page, filename, format) {
 }
 
 page.viewportSize = { width: 1280, height: 720 };
-page.open('images/stars.svg', function() {
+page.open('html/animation_test.html', function() {
     t=0;
 
     interval = setInterval(function(){
