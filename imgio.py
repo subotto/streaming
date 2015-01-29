@@ -165,6 +165,13 @@ def read_raw_frame(fin, width, height):
     image = numpy.copy(image)
     return image
 
+def read_blob_from_phantom(fin):
+    length = int(fin.readline())
+    data = fin.read(length)
+    newline = fin.read(1)
+    assert newline == '\n'
+    return data
+
 def get_cairo_image(image):
     height, width, channels = image.shape
     size = (width, height)
@@ -177,7 +184,8 @@ def swap_channels(image):
     """Swap R and B channels.
 
     """
-    return numpy.dstack([image[:,:,2], image[:,:,1], image[:,:,1], image[:,:,3]])
+    # FIXME: this may be inefficient.
+    return numpy.dstack([image[:,:,2], image[:,:,1], image[:,:,0], image[:,:,3]])
 
 def get_cairo_context(image):
     height, width, channels = image.shape

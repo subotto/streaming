@@ -11,7 +11,12 @@ function output_image(page, filename, format) {
         outfile.writeLine(page.content);
         outfile.close();
     } else {
-        page.render(filename, {format: format});
+        var outfile = fs.open(filename, 'w');
+        var imdata = page.renderBase64(format);
+        var length = imdata.length;
+        outfile.writeLine(length);
+        outfile.writeLine(imdata);
+        outfile.close();
     }
 }
 
@@ -20,7 +25,7 @@ page.open('images/stars.svg', function() {
     t=0;
 
     interval = setInterval(function(){
-	      output_image(page, '/dev/stdout', 'jpg');
+	      output_image(page, '/dev/stdout', 'png');
         t++;
 	      //system.stderr.write(' '+t++);
 	      //if (t>400) {phantom.exit();}
