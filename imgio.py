@@ -204,7 +204,6 @@ def swap_channels(image):
     """Swap R and B channels.
 
     """
-    # FIXME: this may be inefficient.
     return numpy.dstack([image[:,:,2], image[:,:,1], image[:,:,0], image[:,:,3]])
 
 def get_cairo_context(image):
