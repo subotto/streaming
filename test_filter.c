@@ -9,6 +9,7 @@
 typedef struct {
   unsigned char *buf;
   int width, height, subsamp;
+  double timestamp;
   cairo_surface_t *surf;
   cairo_t *ctx;
 } Image;
@@ -29,7 +30,10 @@ Image *read_frame(FILE *fin) {
   image->ctx = NULL;
 
   uint32_t length;
+  double timestamp;
   size_t res;
+  res = fread(&timestamp, 8, 1, fin);
+  assert(res == 1);
   res = fread(&length, 4, 1, fin);
   assert(res == 1);
   length = ntohl(length);
@@ -41,6 +45,7 @@ Image *read_frame(FILE *fin) {
   tjhandle jpeg_dec = tjInitDecompress();
   tjDecompressHeader2(jpeg_dec, buf, length, &image->width, &image->height, &image->subsamp);
   image->buf = malloc(image->width * image->height * 4);
+  image->timestamp = timestamp;
   tjDecompress2(jpeg_dec, buf, length, image->buf, image->width, 0, image->height,  TJPF_RGBX, TJFLAG_FASTDCT);
   tjDestroy(jpeg_dec);
 
@@ -63,6 +68,8 @@ void write_frame(FILE *fout, Image *image) {
 
   uint32_t length32 = htonl((uint32_t) length);
   size_t res;
+  res = fwrite(&image->timestamp, 8, 1, fout);
+  assert(res == 1);
   res = fwrite(&length32, 4, 1, fout);
   assert(res == 1);
   res = fwrite(buf, 1, length, fout);
