@@ -90,6 +90,73 @@ def write_frame(fout, image, **kwargs):
     imdata = jpeg_interface[1](image, **kwargs)
     write_jpeg_frame(fout, imdata)
 
+# See https://stackoverflow.com/questions/1557071/the-size-of-a-jpegjfif-image for information
+def read_unbounded_jpeg_frame(fin):
+    data = []
+
+    # Read the SOI tag (or check that the stream was finished)
+    tag = fin.read(2)
+    data.append(tag)
+    if tag == '':
+        return
+    assert tag == SOI_TAG
+
+    read_tag = None
+
+    while True:
+        # Read the tag
+        if read_tag is None:
+            tag = fin.read(2)
+            data.append(tag)
+        else:
+            tag = read_tag
+        #print >> sys.stderr, repr(tag)
+        assert len(tag) == 2
+        assert tag[0] == '\xff'
+
+        # If we have EOI, we're done!
+        if tag == EOI_TAG:
+            break
+
+        # Some tag have no payload, skip them
+        if tag in TAG_WITHOUT_LENGTH:
+            continue
+
+        # Read payload length
+        length_bytes = fin.read(2)
+        assert len(length_bytes) == 2
+        data.append(length_bytes)
+        length, = struct.unpack("!H", length_bytes)
+        #print >> sys.stderr, length
+
+        # Read payload
+        payload = fin.read(length - 2)
+        assert len(payload) == length - 2
+        data.append(payload)
+
+        # SOS packets have additional data after the payload; it's ok
+        # to search for a new marker, because markers cannot occur in
+        # such data
+        read_tag = None
+        if tag == SOS_TAG:
+            prev_ff = False
+            while True:
+                byte = fin.read(1)
+                data.append(byte)
+                #print >> sys.stderr, repr(byte),
+                if prev_ff and byte != '\x00':
+                    read_tag = '\xff' + byte
+                    break
+                prev_ff = (byte == '\xff')
+
+    return "".join(data)
+
+def read_unbounded_frame(fin, **kwargs):
+    imdata = read_unbounded_jpeg_frame(fin)
+    image = jpeg_interface[0](imdata, **kwargs)
+
+    return image
+
 # Read a RAW frame, which is assumed to be RGBA and of known size
 def read_raw_frame(fin, width, height):
     length = width * height * 4

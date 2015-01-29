@@ -18,14 +18,14 @@ def edit_frame(ctx, size, num):
     #image_to_draw = read_frame(fweb)
     image_to_draw = swap_channels(read_raw_frame(fweb, 1280, 720))
     _, web_render = get_cairo_image(image_to_draw)
-    #image_to_draw=cairo.ImageSurface.create_from_png("webpage_render.png")
+    #image_to_draw = cairo.ImageSurface.create_from_png("webpage_render.png")
     ctx.save()
     ctx.set_source_surface(web_render)
     ctx.paint()
     ctx.restore()
     
 def main():
-    fweb = open("webpage_fifo", "r")
+    #fweb = open("webpage_fifo", "r")
     num = 0
     try:
         while True:

@@ -20,7 +20,7 @@ page.open('images/stars.svg', function() {
     t=0;
 
     interval = setInterval(function(){
-	      output_image(page, '/dev/stdout', 'svg');
+	      output_image(page, '/dev/stdout', 'jpg');
         t++;
 	      //system.stderr.write(' '+t++);
 	      //if (t>400) {phantom.exit();}
