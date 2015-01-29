@@ -32,7 +32,7 @@ def main():
             # Read image and show it (TODO - I couldn't make any sense
             # of the surfarray interface, which in theory should be
             # the best way to do these things)
-            image = read_frame(sys.stdin)
+            image, timestamp = read_frame(sys.stdin)
             #print type(image)
             image_size = image.shape[1], image.shape[0]
             #print image_size

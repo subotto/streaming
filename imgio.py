@@ -68,29 +68,49 @@ def tj_write_to_data(image, pixel_format=TJPF_RGBX):
 jpeg_interface = [tj_open_from_data, tj_write_to_data]
 
 def read_jpeg_frame(fin):
+    timestamp_tag = fin.read(8)
     length_tag = fin.read(4)
+    timestamp, = struct.unpack("d", timestamp_tag)
     length, = struct.unpack("!I", length_tag)
     imdata = fin.read(length)
 
-    return imdata
+    return imdata, timestamp
 
 def read_frame(fin, **kwargs):
-    imdata = read_jpeg_frame(fin)
+    imdata, timestamp = read_jpeg_frame(fin)
     image = jpeg_interface[0](imdata, **kwargs)
 
-    return image
+    return image, timestamp
 
-def write_jpeg_frame(fout, imdata):
+def write_jpeg_frame(fout, imdata, timestamp):
+    timestamp_tag = struct.pack("d", timestamp)
     length = len(imdata)
     length_tag = struct.pack("!I", length)
+    fout.write(timestamp_tag)
     fout.write(length_tag)
     fout.write(imdata)
 
-def write_frame(fout, image, **kwargs):
+def write_frame(fout, image, timestamp, **kwargs):
     imdata = jpeg_interface[1](image, **kwargs)
-    write_jpeg_frame(fout, imdata)
+    write_jpeg_frame(fout, imdata, timestamp)
 
 # See https://stackoverflow.com/questions/1557071/the-size-of-a-jpegjfif-image for information
+SOI_TAG = '\xff\xd8'
+EOI_TAG = '\xff\xd9'
+SOS_TAG = '\xff\xda'
+TAG_WITHOUT_LENGTH = ['\xff\xd8',
+                      '\xff\x01',
+                      '\xff\xd0',
+                      '\xff\xd1',
+                      '\xff\xd2',
+                      '\xff\xd3',
+                      '\xff\xd4',
+                      '\xff\xd5',
+                      '\xff\xd6',
+                      '\xff\xd7',
+                      '\xff\xd9',
+                  ]
+
 def read_unbounded_jpeg_frame(fin):
     data = []
 

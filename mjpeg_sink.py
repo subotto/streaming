@@ -10,7 +10,7 @@ def main():
     num = 0
     try:
         while True:
-            imdata = read_jpeg_frame(sys.stdin)
+            imdata, timestamp = read_jpeg_frame(sys.stdin)
             if imdata == '':
                 break
             sys.stdout.write(imdata)

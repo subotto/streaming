@@ -29,7 +29,7 @@ class RasterSVGFromStream:
     def __init__(self, fin):
         self.fin = fin
 
-    def process_frame(self, ctx, size, num):
+    def process_frame(self, ctx, size, timestamp):
         length = int(self.fin.readline().strip())
         svg_data = self.fin.read(length + 1)
         clock.tic('SVG read')
@@ -41,7 +41,9 @@ class RasterSVGFromStream:
         svg_handle.render_cairo(ctx)
         ctx.restore()
 
-def edit_frame(ctx, size, num):
+def edit_frame(ctx, size, timestamp):
+    timestamp = timestamp % 10.0
+
     sheep_svg = rsvg.Handle("pecora.svg")
 
     ctx.scale (size[0]/4, size[1]/3)
@@ -59,7 +61,7 @@ def edit_frame(ctx, size, num):
     ctx.move_to(0.1, 0.1)
     ctx.identity_matrix()
  
-    ctx.translate(2.0 * num, 350.0 + 50.0 * math.cos(2 * math.pi * num / 200.0))
+    ctx.translate(40.0 * timestamp, 350.0 + 50.0 * math.cos(2 * math.pi * timestamp / 10.0))
     ctx.scale(0.25, 0.25)
     
     #svg_code=read_svg_frame()
@@ -73,27 +75,25 @@ def edit_frame(ctx, size, num):
     sheep_svg.render_cairo(ctx)
 
 def main():
-    num = 0
     #fin = open('webpage_fifo')
     #rsfs = RasterSVGFromStream(fin)
     try:
         while True:
             frame_clock.tic('frame clock')
             clock.tic('new cycle')
-            image = read_frame(sys.stdin, pixel_format=TJPF_BGRX)
+            image, timestamp = read_frame(sys.stdin, pixel_format=TJPF_BGRX)
             clock.tic('frame read')
             #print >> sys.stderr, image.shape
             ctx, size, surf = get_cairo_context(image)
             clock.tic('cairo context created')
-            edit_frame(ctx, size, num)
-            #rsfs.process_frame(ctx, size, num)
+            edit_frame(ctx, size, timestamp)
+            #rsfs.process_frame(ctx, size, timestamp)
             clock.tic('SVG rendered')
             surf.flush()
             clock.tic('surface flushed')
-            write_frame(sys.stdout, image, pixel_format=TJPF_BGRX)
+            write_frame(sys.stdout, image, timestamp, pixel_format=TJPF_BGRX)
             clock.tic('frame written')
             clock.tic('cycle finished')
-            num += 1
     except KeyboardInterrupt:
         pass
 

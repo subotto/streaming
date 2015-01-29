@@ -11,7 +11,7 @@ def main():
     ext = sys.argv[1]
     try:
         while True:
-            imdata = read_jpeg_frame(sys.stdin)
+            imdata, timestamp = read_jpeg_frame(sys.stdin)
             with open("frames/frame_%06d.%s" % (num, ext), 'w') as fout:
                 fout.write(imdata)
             num += 1
