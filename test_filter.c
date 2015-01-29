@@ -3,8 +3,14 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <time.h>
+
 #include <cairo.h>
 #include <turbojpeg.h>
+
+
+#define JPEG_QUALITY 95
+
 
 typedef struct {
   unsigned char *buf;
@@ -13,6 +19,23 @@ typedef struct {
   cairo_surface_t *surf;
   cairo_t *ctx;
 } Image;
+
+
+inline static double timer() {
+
+  struct timespec ts;
+  clock_gettime(CLOCK_MONOTONIC_RAW, &ts);
+  return ts.tv_sec + 1e-9 * ts.tv_nsec;
+
+}
+
+inline static void tic(double *clock, const char *desc) {
+
+  double new_time = timer();
+  fprintf(stderr, "> TIC! %f (%s)\n", new_time - *clock, desc);
+  *clock = new_time;
+
+}
 
 void free_image(Image *image) {
 
@@ -46,7 +69,7 @@ Image *read_frame(FILE *fin) {
   tjDecompressHeader2(jpeg_dec, buf, length, &image->width, &image->height, &image->subsamp);
   image->buf = malloc(image->width * image->height * 4);
   image->timestamp = timestamp;
-  tjDecompress2(jpeg_dec, buf, length, image->buf, image->width, 0, image->height,  TJPF_RGBX, TJFLAG_FASTDCT);
+  tjDecompress2(jpeg_dec, buf, length, image->buf, image->width, 0, image->height,  TJPF_RGBX, TJFLAG_ACCURATEDCT);
   tjDestroy(jpeg_dec);
 
   free(buf);
@@ -55,15 +78,13 @@ Image *read_frame(FILE *fin) {
 
 }
 
-#define JPEG_QUALITY 50
-
 void write_frame(FILE *fout, Image *image) {
 
   unsigned long length;
   unsigned char *buf = NULL;
 
   tjhandle jpeg_enc = tjInitCompress();
-  tjCompress2(jpeg_enc, image->buf, image->width, 0, image->height, TJPF_RGBX, &buf, &length, TJSAMP_444, JPEG_QUALITY, TJFLAG_FASTDCT);
+  tjCompress2(jpeg_enc, image->buf, image->width, 0, image->height, TJPF_RGBX, &buf, &length, TJSAMP_444, JPEG_QUALITY, TJFLAG_ACCURATEDCT);
   tjDestroy(jpeg_enc);
 
   uint32_t length32 = htonl((uint32_t) length);
@@ -122,13 +143,23 @@ int main() {
 
   //freopen("test.stream", "r", stdin);
 
+  double clock = timer();
+  double frame_clock = clock;
   while (1) {
+    tic(&frame_clock, "frame_clock");
+    tic(&clock, "new cycle");
     Image *image = read_frame(stdin);
+    tic(&clock, "frame read");
     setup_cairo(image);
+    tic(&clock, "cairo context created");
     edit_frame(image);
+    tic(&clock, "frame edited");
     cairo_surface_flush(image->surf);
+    tic(&clock, "surface flushed");
     write_frame(stdout, image);
+    tic(&clock, "frame written");
     free_image(image);
+    tic(&clock, "cycle finished");
   }
 
   return 0;
