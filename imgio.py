@@ -44,7 +44,7 @@ import pytj
 from pytj import TJPF_RGBX, TJPF_BGRX
 tj_ctx = pytj.create_tjcontext()
 
-def tj_open_from_data(data, pixel_format=TJPF_RGBX):
+def tj_open_from_data(data, pixel_format=TJPF_BGRX):
     res = pytj.decode_image(tj_ctx, data, len(data), pixel_format, pytj.TJFLAG_ACCURATEDCT)
     as_str = pytj.cdata(res.buf, res.width * res.height * 4)
     pytj.free_decoded_image(res.buf)
@@ -54,7 +54,7 @@ def tj_open_from_data(data, pixel_format=TJPF_RGBX):
 
     return image
 
-def tj_write_to_data(image, pixel_format=TJPF_RGBX):
+def tj_write_to_data(image, pixel_format=TJPF_BGRX):
     height, width, channels = image.shape
     #print >> sys.stderr, image.__array_interface__
     res = pytj.encode_image(tj_ctx, image.__array_interface__['data'][0], width, height, pixel_format, pytj.TJSAMP_444, 95, pytj.TJFLAG_ACCURATEDCT)

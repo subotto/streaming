@@ -47,7 +47,7 @@ def edit_frame(ctx, size, timestamp):
     sheep_svg = rsvg.Handle("pecora.svg")
 
     ctx.scale (size[0]/4, size[1]/3)
-    ctx.set_source_rgb(0.0, 1.0, 0.0)
+    ctx.set_source_rgb(1.0, 0.0, 0.0)
     ctx.select_font_face("Ubuntu Medium",
                          cairo.FONT_SLANT_NORMAL,
                          cairo.FONT_WEIGHT_NORMAL)
@@ -81,7 +81,7 @@ def main():
         while True:
             frame_clock.tic('frame clock')
             clock.tic('new cycle')
-            image, timestamp = read_frame(sys.stdin, pixel_format=TJPF_BGRX)
+            image, timestamp = read_frame(sys.stdin)
             clock.tic('frame read')
             #print >> sys.stderr, image.shape
             ctx, size, surf = get_cairo_context(image)
@@ -91,7 +91,7 @@ def main():
             clock.tic('SVG rendered')
             surf.flush()
             clock.tic('surface flushed')
-            write_frame(sys.stdout, image, timestamp, pixel_format=TJPF_BGRX)
+            write_frame(sys.stdout, image, timestamp)
             clock.tic('frame written')
             clock.tic('cycle finished')
     except KeyboardInterrupt:

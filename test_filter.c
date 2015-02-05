@@ -8,8 +8,7 @@
 #include <cairo.h>
 #include <turbojpeg.h>
 
-
-#define JPEG_QUALITY 95
+#include "_pytj.h"
 
 
 typedef struct {
@@ -19,6 +18,9 @@ typedef struct {
   cairo_surface_t *surf;
   cairo_t *ctx;
 } Image;
+
+
+TJContext *ctx;
 
 
 inline static double timer() {
@@ -65,12 +67,11 @@ Image *read_frame(FILE *fin) {
   res = fread(buf, 1, length, fin);
   assert(res == length);
 
-  tjhandle jpeg_dec = tjInitDecompress();
-  tjDecompressHeader2(jpeg_dec, buf, length, &image->width, &image->height, &image->subsamp);
-  image->buf = malloc(image->width * image->height * 4);
+  DecodeRes dres = decode_image(ctx, buf, length, TJPF_BGRX, TJFLAG_ACCURATEDCT);
+  image->width = dres.width;
+  image->height = dres.height;
+  image->buf = dres.buf;
   image->timestamp = timestamp;
-  tjDecompress2(jpeg_dec, buf, length, image->buf, image->width, 0, image->height,  TJPF_RGBX, TJFLAG_ACCURATEDCT);
-  tjDestroy(jpeg_dec);
 
   free(buf);
 
@@ -80,23 +81,18 @@ Image *read_frame(FILE *fin) {
 
 void write_frame(FILE *fout, Image *image) {
 
-  unsigned long length;
-  unsigned char *buf = NULL;
+  EncodeRes eres = encode_image(ctx, (unsigned long) image->buf, image->width, image->height, TJPF_BGRX, TJSAMP_444, 95, TJFLAG_ACCURATEDCT);
 
-  tjhandle jpeg_enc = tjInitCompress();
-  tjCompress2(jpeg_enc, image->buf, image->width, 0, image->height, TJPF_RGBX, &buf, &length, TJSAMP_444, JPEG_QUALITY, TJFLAG_ACCURATEDCT);
-  tjDestroy(jpeg_enc);
-
-  uint32_t length32 = htonl((uint32_t) length);
+  uint32_t length32 = htonl((uint32_t) eres.len);
   size_t res;
   res = fwrite(&image->timestamp, 8, 1, fout);
   assert(res == 1);
   res = fwrite(&length32, 4, 1, fout);
   assert(res == 1);
-  res = fwrite(buf, 1, length, fout);
-  assert(res == length);
+  res = fwrite(eres.buf, 1, eres.len, fout);
+  assert(res == eres.len);
 
-  tjFree(buf);
+  tjFree(eres.buf);
 
 }
 
@@ -110,7 +106,7 @@ void setup_cairo(Image *image) {
 void edit_frame(Image *image) {
 
   cairo_scale(image->ctx, image->width/4, image->height/3);
-  cairo_set_source_rgb(image->ctx, 0.0, 1.0, 0.0);
+  cairo_set_source_rgb(image->ctx, 1.0, 0.0, 0.0);
   cairo_select_font_face(image->ctx, "Ubuntu Medium", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL);
   cairo_set_font_size(image->ctx, 0.12);
   char *text = "MATEMATICI 1874 1110 FISICI";
@@ -142,6 +138,8 @@ void edit_frame(Image *image) {
 int main() {
 
   //freopen("test.stream", "r", stdin);
+
+  ctx = create_tjcontext();
 
   double clock = timer();
   double frame_clock = clock;

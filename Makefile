@@ -14,3 +14,5 @@ _pytj_wrap.o: _pytj_wrap.c _pytj.h
 
 _pytj.so:_pytj.o _pytj_wrap.o
 	gcc -shared -o _pytj.so `python-config --libs` -lturbojpeg _pytj.o _pytj_wrap.o
+
+test_filter: _pytj.c test_filter.c

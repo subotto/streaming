@@ -22,7 +22,9 @@ void free_tjcontext(TJContext *ctx) {
 
 }
 
-// The buffer is assumed to be width * height * 4
+// The buffer is assumed to be width * height * 4; buffer address is
+// passed as unsigned long (instead of unsigned char*) in order to
+// simplify interface with Python
 EncodeRes encode_image(TJContext *ctx, unsigned long _buf, unsigned int width, unsigned int height, int pixel_format, int subsamp, int quality, int flags) {
 
   unsigned long length;

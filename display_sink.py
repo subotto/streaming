@@ -7,7 +7,7 @@ import pygame
 import pygame.locals
 import numpy
 
-from imgio import read_frame
+from imgio import read_frame, TJPF_RGBX
 
 def main():
     # Init PyGame
@@ -32,7 +32,7 @@ def main():
             # Read image and show it (TODO - I couldn't make any sense
             # of the surfarray interface, which in theory should be
             # the best way to do these things)
-            image, timestamp = read_frame(sys.stdin)
+            image, timestamp = read_frame(sys.stdin, pixel_format=TJPF_RGBX)
             #print type(image)
             image_size = image.shape[1], image.shape[0]
             #print image_size

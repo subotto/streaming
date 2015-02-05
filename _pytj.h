@@ -17,7 +17,7 @@ typedef struct {
 
 typedef struct {
   void *buf;
-  unsigned int len;
+  unsigned long len;
 } EncodeRes;
 
 TJContext *create_tjcontext(void);
