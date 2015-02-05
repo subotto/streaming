@@ -36,7 +36,7 @@ int main(int argc, char *argv[]) {
   }
 
   // Make a screen to put our video
-  screen = SDL_SetVideoMode(width, height, 0, 0);
+  screen = SDL_SetVideoMode(width, height, 0, SDL_RESIZABLE);
   if(!screen) {
     fprintf(stderr, "SDL: could not set video mode - exiting\n");
     exit(1);
