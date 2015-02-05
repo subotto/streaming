@@ -17,6 +17,13 @@ typedef struct {
 
 typedef struct {
   void *buf;
+  unsigned int len;
+  unsigned int width;
+  unsigned int height;
+} DecodeYUVRes;
+
+typedef struct {
+  void *buf;
   unsigned long len;
 } EncodeRes;
 
@@ -26,5 +33,7 @@ EncodeRes encode_image(TJContext *ctx, unsigned long _buf, unsigned int width, u
 void free_encoded_image(void *buf);
 DecodeRes decode_image(TJContext *ctx, char *buf, unsigned long len, int pixel_format, int flags);
 void free_decoded_image(void *buf);
+DecodeYUVRes decode_image_to_yuv(TJContext *ctx, char *buf, unsigned long len, int flags);
+void free_decoded_yuv_image(void *buf);
 
 #endif
