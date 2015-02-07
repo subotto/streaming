@@ -64,6 +64,7 @@ DecodeRes decode_image(TJContext *ctx, char *buf, unsigned long len, int pixel_f
   res.width = width;
   res.height = height;
   res.buf = outbuf;
+  res.subsamp = subsamp;
 
   return res;
 
@@ -93,6 +94,7 @@ DecodeYUVRes decode_image_to_yuv(TJContext *ctx, char *buf, unsigned long len, i
   res.height = height;
   res.buf = outbuf;
   res.len = outbuf_len;
+  res.subsamp = subsamp;
 
   return res;
 

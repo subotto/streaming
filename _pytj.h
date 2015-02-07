@@ -13,6 +13,7 @@ typedef struct {
   void *buf;
   unsigned int width;
   unsigned int height;
+  int subsamp;
 } DecodeRes;
 
 typedef struct {
@@ -20,6 +21,7 @@ typedef struct {
   unsigned int len;
   unsigned int width;
   unsigned int height;
+  int subsamp;
 } DecodeYUVRes;
 
 typedef struct {
