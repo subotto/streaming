@@ -9,7 +9,7 @@ import threading
 QUEUE_MAXSIZE = 5 * 120
 
 
-class ImageSocketServerHandler:
+class ImageSocketServerHandler(SocketServer.BaseRequestHandler):
 
     def handle(self):
         # When beginning execution, register itself against the
@@ -25,7 +25,7 @@ class ImageSocketServerHandler:
         try:
             while True:
                 data = self.queue.get(block=True)
-                self.socket.sendall(data)
+                self.request.sendall(data)
                 # There apparently is no mechanism to flush the socket
                 self.queue.task_done()
 
@@ -49,11 +49,16 @@ class ImageSocketServerHandler:
         return True
 
 
-class ImageSocketServer:
+class ImageSocketServer(SocketServer.ThreadingTCPServer):
 
     def __init__(self, host, port):
-        self.server = SocketServer.ThreadingTCPServer((host, port), ImageSocketServerRequest)
+        SocketServer.ThreadingTCPServer.__init__(self, (host, port), ImageSocketServerHandler)
+
         self.handlers = []
+        self.daemon_threads = True
+        self.main_thread = threading.Thread(target=self.serve_forever)
+        self.main_thread.daemon = True
+        self.main_thread.start()
 
     def register_handler(self, handler):
         self.handlers.append(handler)

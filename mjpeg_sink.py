@@ -11,8 +11,6 @@ def main():
     try:
         while True:
             imdata, timestamp = read_jpeg_frame(sys.stdin)
-            if imdata == '':
-                break
             sys.stdout.write(imdata)
             num += 1
     except KeyboardInterrupt:
