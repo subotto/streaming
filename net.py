@@ -75,3 +75,47 @@ class ImageSocketServer(SocketServer.ThreadingTCPServer):
         # more efficient)
         for handler in to_remove:
             self.handlers.remove(handler)
+
+
+class WritingThread:
+    """A simplified and non-socket-bound version of the classes
+    above. Instead of writing data to a file, you pass them to a
+    thread that writes to the file. The main program is not blocked by
+    writing to the file.
+
+    """
+
+    def __init__(self, fout):
+        self.fout = fout
+        self.thread = threading.Thread(target=self.work)
+        self.thread.daemon = True
+        self.queue = Queue.Queue(maxsize=QUEUE_MAXSIZE)
+        self.active = True
+
+        self.thread.start()
+
+    def work(self):
+        try:
+            while True:
+                data = self.queue.get(block=True)
+                self.fout.write(data)
+                #self.fout.flush()
+                self.queue.task_done()
+
+        except:
+            self.active = False
+            raise
+
+    def post_data(self, data):
+        if not self.active:
+            return False
+
+        try:
+            self.queue.put(data, block=False)
+        except Queue.Full:
+            print >> sys.stderr, "Frame lost when queueing"
+
+        return True
+
+    def write(self, data):
+        self.post_data(data)
