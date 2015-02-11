@@ -3,13 +3,20 @@
 
 import sys
 import Queue
+import collections
 import SocketServer
 import threading
 import socket
+import time
+import resource
 
 from imgio import read_frame, write_frame
 
 QUEUE_MAXSIZE = 5 * 120
+
+
+def clear_line():
+    sys.stderr.write('\r\033[2K')
 
 
 class ImageSocketServerHandler(SocketServer.BaseRequestHandler):
@@ -80,32 +87,132 @@ class ImageSocketServer(SocketServer.ThreadingTCPServer):
             self.handlers.remove(handler)
 
 
-# TODO: finish
 class ImageMultiClient:
 
     def __init__(self, servers):
+        """Connect to a number of image servers.
+
+        The parameter servers is a list of tuples of the type ((host,
+        port), timeout). Timeout is a float value that specifies the
+        maximum number of seconds frames getting in can delay behind
+        real time.
+
+        """
+        # Lay out arguments in internal structures
         self.addresses = []
         self.timeouts = []
-        for i, (address, timeout) in enumerate(server):
-            self.addresses[i] = addres
-            self.timeouts[i] = timeout
-        self.queues = [Queue.Queue() for _ in self.servers]
+        for i, (address, timeout) in enumerate(servers):
+            self.addresses.append(address)
+            self.timeouts.append(timeout)
+
+        # Individual frame queues and threads
+        self.queues = [collections.deque() for _ in servers]
         self.threads = []
-        self.condition = None  # TODO
-        for i, _ in enumerate(self.servers):
-            thread = threading.Thread(target=worker, args=[i])
+
+        # Every time a thread has a new frame, it notifies this
+        # condition variable
+        self.condition = threading.Condition()
+
+        # Debugging and profiling
+        self.memory_used = [None] * len(servers)
+
+        # Set up and spawn threads
+        for i, _ in enumerate(servers):
+            thread = threading.Thread(target=self.worker, args=[i])
             thread.daemon = True
             self.threads.append(thread)
-        for thread in threads:
+        for thread in self.threads:
             thread.start()
 
+    def get_status(self):
+        now = time.time()
+        ret = []
+        for queue, memory in zip(self.queues, self.memory_used):
+            delay = None
+            if len(queue) != 0:
+                # [last item][timestamp]
+                delay = now - queue[-1][1]
+            ret.append((delay, len(queue), memory))
+        return ret
+
+    def write_status(self):
+        status = self.get_status()
+        clear_line()
+        sys.stderr.write(("%40s " * len(status)) % tuple(status))
+
     def worker(self, shard):
+        # Set up the connection
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.connect(self.addresses[shard])
         fin = sock.makefile()
+
+        # Start receiving frames
         while True:
             image, timestamp = read_frame(fin)
-            self.queue.put((image, timestamp))
+            with self.condition:
+                self.queues[shard].append((image, timestamp))
+                self.condition.notifyAll()
+            self.memory_used[shard] = resource.getrusage(1).ru_maxrss / 1000
+
+    def advance_to_timestamp(self, timestamp, empty=False):
+        """Pop all elements with timestamp strictly smaller than the specified
+        one, from all queues. As an exception, if empty is False then
+        queues are never emptied; i.e., last item never gets deleted,
+        even when it has past timestamp.
+
+        """
+        with self.condition:
+            # Trim queues
+            for queue in self.queues:
+                while True:
+                    if len(queue) == 1 and not empty:
+                        break
+                    try:
+                        first = queue[0]
+                    except IndexError:
+                        break
+                    # [timestamp]
+                    if first[1] < timestamp:
+                        queue.popleft()
+                    else:
+                        break
+
+            # Build and return frames
+            ret = []
+            for queue in self.queues:
+                if len(queue) == 0:
+                    ret.append(None)
+                else:
+                    ret.append(queue[0])
+            return ret
+
+    def advance_to_stream(self, shard, empty=False, block=False):
+        with self.condition:
+            queue = self.queues[shard]
+
+            # Discard first frame if there is one, so that we do not
+            # go over the same frame over and over
+            if len(queue) > 0:
+                queue.popleft()
+
+            # If blocking, wait to have another frame
+            if block:
+                while True:
+                    if len(queue) > 0:
+                        break
+                    else:
+                        self.condition.wait()
+
+            # Check if there is a new frame (there is one for sure if
+            # we were blocking)
+            try:
+                # [shard][first element][timestamp]
+                timestamp = queue[0][1]
+            except IndexError:
+                return None
+
+            # If there is, proceed with advancing
+            return self.advance_to_timestamp(timestamp, empty=empty)
 
 
 class WritingThread:
