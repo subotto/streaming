@@ -5,6 +5,9 @@ import sys
 import Queue
 import SocketServer
 import threading
+import socket
+
+from imgio import read_frame, write_frame
 
 QUEUE_MAXSIZE = 5 * 120
 
@@ -77,11 +80,41 @@ class ImageSocketServer(SocketServer.ThreadingTCPServer):
             self.handlers.remove(handler)
 
 
+# TODO: finish
+class ImageMultiClient:
+
+    def __init__(self, servers):
+        self.addresses = []
+        self.timeouts = []
+        for i, (address, timeout) in enumerate(server):
+            self.addresses[i] = addres
+            self.timeouts[i] = timeout
+        self.queues = [Queue.Queue() for _ in self.servers]
+        self.threads = []
+        self.condition = None  # TODO
+        for i, _ in enumerate(self.servers):
+            thread = threading.Thread(target=worker, args=[i])
+            thread.daemon = True
+            self.threads.append(thread)
+        for thread in threads:
+            thread.start()
+
+    def worker(self, shard):
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.connect(self.addresses[shard])
+        fin = sock.makefile()
+        while True:
+            image, timestamp = read_frame(fin)
+            self.queue.put((image, timestamp))
+
+
 class WritingThread:
     """A simplified and non-socket-bound version of the classes
     above. Instead of writing data to a file, you pass them to a
     thread that writes to the file. The main program is not blocked by
     writing to the file.
+
+    Just for testing.
 
     """
 
