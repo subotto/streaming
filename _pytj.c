@@ -6,7 +6,7 @@
 
 TJContext *create_tjcontext(void) {
 
-  TJContext *ctx = malloc(sizeof(TJContext));
+  TJContext *ctx = (TJContext*) malloc(sizeof(TJContext));
   ctx->tj_enc = tjInitCompress();
   ctx->tj_dec = tjInitDecompress();
 
@@ -42,13 +42,13 @@ EncodeRes encode_image(TJContext *ctx, unsigned long _buf, unsigned int width, u
 
 }
 
-void free_encoded_image(void *buf) {
+void free_encoded_image(unsigned char *buf) {
 
   tjFree(buf);
 
 }
 
-DecodeRes decode_image(TJContext *ctx, char *buf, unsigned long len, int pixel_format, int flags) {
+DecodeRes decode_image(TJContext *ctx, unsigned char *buf, unsigned long len, int pixel_format, int flags) {
 
   int width;
   int height;
@@ -59,7 +59,7 @@ DecodeRes decode_image(TJContext *ctx, char *buf, unsigned long len, int pixel_f
   bzero(&res, sizeof(DecodeRes));
 
   tjDecompressHeader2(ctx->tj_dec, buf, len, &width, &height, &subsamp);
-  outbuf = malloc(width * height * 4);
+  outbuf = (unsigned char*) malloc(width * height * 4);
   tjDecompress2(ctx->tj_dec, buf, len, outbuf, width, 0, height, pixel_format, flags);
   res.width = width;
   res.height = height;
@@ -70,13 +70,13 @@ DecodeRes decode_image(TJContext *ctx, char *buf, unsigned long len, int pixel_f
 
 }
 
-void free_decoded_image(void *buf) {
+void free_decoded_image(unsigned char *buf) {
 
   free(buf);
 
 }
 
-DecodeYUVRes decode_image_to_yuv(TJContext *ctx, char *buf, unsigned long len, int flags) {
+DecodeYUVRes decode_image_to_yuv(TJContext *ctx, unsigned char *buf, unsigned long len, int flags) {
 
   int width;
   int height;
@@ -88,7 +88,7 @@ DecodeYUVRes decode_image_to_yuv(TJContext *ctx, char *buf, unsigned long len, i
 
   tjDecompressHeader2(ctx->tj_dec, buf, len, &width, &height, &subsamp);
   unsigned long outbuf_len = tjBufSizeYUV(width, height, subsamp);
-  outbuf = malloc(outbuf_len);
+  outbuf = (unsigned char*) malloc(outbuf_len);
   tjDecompressToYUV(ctx->tj_dec, buf, len, outbuf, flags);
   res.width = width;
   res.height = height;
@@ -100,7 +100,7 @@ DecodeYUVRes decode_image_to_yuv(TJContext *ctx, char *buf, unsigned long len, i
 
 }
 
-void free_decoded_yuv_image(void *buf) {
+void free_decoded_yuv_image(unsigned char *buf) {
 
   free(buf);
 

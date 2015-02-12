@@ -15,9 +15,11 @@ def main():
         time.sleep(0.3)
         while True:
             #print "advance"
-            res = client.advance_to_stream(0)
+            res = client.advance_to_stream(0, block=True)
             if not res:
                 break
+            else:
+                print [r[1] for r in res]
 
 if __name__ == '__main__':
     main()

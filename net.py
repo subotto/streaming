@@ -10,9 +10,9 @@ import socket
 import time
 import resource
 
-from imgio import read_frame, write_frame
+from imgio import read_frame, write_frame, read_jpeg_frame
 
-QUEUE_MAXSIZE = 5 * 120
+QUEUE_MAXSIZE = 5 * 30
 
 
 def clear_line():

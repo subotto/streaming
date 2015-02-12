@@ -4,6 +4,8 @@
 #include <assert.h>
 #include <strings.h>
 
+#include <arpa/inet.h>
+
 #include "imgio.h"
 
 void free_image(Image *image) {
@@ -31,7 +33,7 @@ Image *read_jpeg_frame(TJContext *ctx, FILE *fin) {
   assert(res == 1);
   length = ntohl(length);
   //fprintf(stderr, "read length: %d\n", length);
-  image->jpeg_buf = malloc(length);
+  image->jpeg_buf = (unsigned char*) malloc(length);
   res = fread(image->jpeg_buf, 1, length, fin);
   assert(res == length);
 

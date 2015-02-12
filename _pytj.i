@@ -9,4 +9,7 @@
 
 %}
 
+%thread;
 %include "_pytj.h"
+%nothread;
+
