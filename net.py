@@ -152,6 +152,8 @@ class ImageMultiClient:
             with self.condition:
                 self.queues[shard].append((image, timestamp))
                 self.condition.notifyAll()
+            # RUSAGE_THREAD is not mapped in resource module, but
+            # direct inspection of Linux headers shows it is 1
             self.memory_used[shard] = resource.getrusage(1).ru_maxrss / 1000
 
     def advance_to_timestamp(self, timestamp, empty=False):
