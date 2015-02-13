@@ -8,35 +8,69 @@
 
 #include "imgio.h"
 
+unsigned char *clone_buf(const unsigned char *buf, size_t length) {
+
+  if (buf == NULL) return NULL;
+
+  unsigned char *ret = (unsigned char*) malloc(length);
+  assert(ret != NULL);
+  memcpy(ret, buf, length);
+
+  return ret;
+
+}
+
+Image *clone_image(const Image *image) {
+
+  Image *ret = (Image*) malloc(sizeof(Image));
+  memcpy(ret, image, sizeof(Image));
+  ret->ctx = NULL;
+  ret->surf = NULL;
+  ret->buf = clone_buf(ret->buf, 4 * ret->width * ret->height);
+  ret->jpeg_buf = clone_buf(ret->jpeg_buf, ret->jpeg_length);
+  ret->yuv_buf = clone_buf(ret->yuv_buf, ret->yuv_len);
+
+  return ret;
+
+}
+
 void free_image(Image *image) {
 
   free(image->buf);
   free(image->jpeg_buf);
   free(image->yuv_buf);
-  free(image);
   if (image->ctx) cairo_destroy(image->ctx);
   if (image->surf) cairo_surface_destroy(image->surf);
+  free(image);
 
 }
 
 Image *read_jpeg_frame(TJContext *ctx, FILE *fin) {
 
-  Image *image = (Image*) malloc(sizeof(Image));
-  bzero(image, sizeof(Image));
-
   uint32_t length;
   double timestamp;
   size_t res;
   res = fread(&timestamp, 8, 1, fin);
-  assert(res == 1);
+  if (res != 1) return NULL;
   res = fread(&length, 4, 1, fin);
-  assert(res == 1);
+  if (res != 1) return NULL;
   length = ntohl(length);
   //fprintf(stderr, "read length: %d\n", length);
-  image->jpeg_buf = (unsigned char*) malloc(length);
-  res = fread(image->jpeg_buf, 1, length, fin);
-  assert(res == length);
+  unsigned char *buf = (unsigned char*) malloc(length);
+  if (buf == NULL) return NULL;
+  res = fread(buf, 1, length, fin);
+  if (res != length) {
+    free(buf);
+    return NULL;
+  }
 
+  Image *image = (Image*) malloc(sizeof(Image));
+  if (image == NULL) {
+    free(buf);
+    return NULL;
+  }
+  bzero(image, sizeof(Image));
+  image->jpeg_buf = buf;
   image->jpeg_length = length;
   image->timestamp = timestamp;
 
@@ -47,8 +81,9 @@ Image *read_jpeg_frame(TJContext *ctx, FILE *fin) {
 Image *read_frame(TJContext *ctx, FILE *fin) {
 
   Image *image = read_jpeg_frame(ctx, fin);
+  if (image == NULL) return NULL;
 
-  DecodeRes dres = decode_image(ctx, image->jpeg_buf, image->jpeg_length, TJPF_BGRX, TJFLAG_ACCURATEDCT);
+  DecodeRes dres = decode_image(ctx, (char*) image->jpeg_buf, image->jpeg_length, TJPF_BGRX, TJFLAG_ACCURATEDCT);
   image->width = dres.width;
   image->height = dres.height;
   image->buf = dres.buf;
@@ -63,11 +98,12 @@ Image *read_frame(TJContext *ctx, FILE *fin) {
 
 }
 
+// FIXME: error handling
 Image *read_frame_to_yuv(TJContext *ctx, FILE *fin) {
 
   Image *image = read_jpeg_frame(ctx, fin);
 
-  DecodeYUVRes dres = decode_image_to_yuv(ctx, image->jpeg_buf, image->jpeg_length, TJFLAG_ACCURATEDCT);
+  DecodeYUVRes dres = decode_image_to_yuv(ctx, (char*) image->jpeg_buf, image->jpeg_length, TJFLAG_ACCURATEDCT);
   image->width = dres.width;
   image->height = dres.height;
   image->yuv_buf = dres.buf;
@@ -83,6 +119,7 @@ Image *read_frame_to_yuv(TJContext *ctx, FILE *fin) {
 
 }
 
+// FIXME: error handling
 void write_jpeg_frame(TJContext *ctx, FILE *fout, Image *image) {
 
   uint32_t length32 = htonl((uint32_t) image->jpeg_length);
@@ -96,6 +133,7 @@ void write_jpeg_frame(TJContext *ctx, FILE *fout, Image *image) {
 
 }
 
+// FIXME: error handling
 void write_frame(TJContext *ctx, FILE *fout, Image *image) {
 
   EncodeRes eres = encode_image(ctx, (unsigned long) image->buf, image->width, image->height, TJPF_BGRX, TJSAMP_444, 95, TJFLAG_ACCURATEDCT);

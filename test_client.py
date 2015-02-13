@@ -15,7 +15,7 @@ def main():
         time.sleep(0.3)
         while True:
             #print "advance"
-            res = client.advance_to_stream(0, block=True)
+            res = client.advance_to_stream(0, block=False)
             if not res:
                 break
             else:

@@ -18,20 +18,18 @@ def main():
         content = fin.read()
 
     num = 0
-    last_write = None
     fout = WritingThread(sys.stdout)
     try:
         while True:
+            before = time.time()
             write_jpeg_frame(fout, content, time.time())
             #print >> sys.stderr, num
             num += 1
             if fps != 0.0:
-                now = time.time()
-                if last_write is not None:
-                    delay = 1.0 / fps - (now - last_write)
-                    if delay > 0.0:
-                        time.sleep(delay)
-                last_write = now
+                after = time.time()
+                delay = 1.0 / fps - (after - before)
+                if delay > 0.0:
+                    time.sleep(delay)
     except KeyboardInterrupt:
         pass
 

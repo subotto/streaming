@@ -23,6 +23,7 @@ typedef struct {
 } Image;
 
 
+Image *clone_image(const Image *image);
 void free_image(Image *image);
 Image *read_jpeg_frame(TJContext *ctx, FILE *fin);
 Image *read_frame(TJContext *ctx, FILE *fin);

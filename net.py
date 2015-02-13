@@ -44,6 +44,9 @@ class ImageSocketServerHandler(SocketServer.BaseRequestHandler):
 
         print >> sys.stderr, "Finished sending data to %s" % (self.name)
 
+    def finish(self):
+        self.request.close()
+
     def post_data(self, data):
         # If the thread is dead, return False, so that the
         # ImageSocketServer stops sending data and performs cleanup
@@ -188,7 +191,7 @@ class ImageMultiClient:
                     ret.append(queue[0])
             return ret
 
-    def advance_to_stream(self, shard, empty=False, block=False):
+    def advance_to_stream(self, shard, block=False, empty=False):
         with self.condition:
             queue = self.queues[shard]
 

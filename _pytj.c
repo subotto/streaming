@@ -4,9 +4,12 @@
 
 #include "_pytj.h"
 
+// FIXME: error handling
 TJContext *create_tjcontext(void) {
 
   TJContext *ctx = (TJContext*) malloc(sizeof(TJContext));
+  if (ctx == NULL) return NULL;
+
   ctx->tj_enc = tjInitCompress();
   ctx->tj_dec = tjInitDecompress();
 
@@ -15,6 +18,8 @@ TJContext *create_tjcontext(void) {
 }
 
 void free_tjcontext(TJContext *ctx) {
+
+  if (ctx == NULL) return;
 
   tjDestroy(ctx->tj_enc);
   tjDestroy(ctx->tj_dec);
@@ -25,6 +30,7 @@ void free_tjcontext(TJContext *ctx) {
 // The buffer is assumed to be width * height * 4; buffer address is
 // passed as unsigned long (instead of unsigned char*) in order to
 // simplify interface with Python
+// FIXME: error handling
 EncodeRes encode_image(TJContext *ctx, unsigned long _buf, unsigned int width, unsigned int height, int pixel_format, int subsamp, int quality, int flags) {
 
   unsigned long length;
@@ -42,13 +48,14 @@ EncodeRes encode_image(TJContext *ctx, unsigned long _buf, unsigned int width, u
 
 }
 
-void free_encoded_image(unsigned char *buf) {
+void free_encoded_image(void *buf) {
 
-  tjFree(buf);
+  tjFree((unsigned char*) buf);
 
 }
 
-DecodeRes decode_image(TJContext *ctx, unsigned char *buf, unsigned long len, int pixel_format, int flags) {
+// FIXME: error handling
+DecodeRes decode_image(TJContext *ctx, char *buf, unsigned long len, int pixel_format, int flags) {
 
   int width;
   int height;
@@ -58,9 +65,9 @@ DecodeRes decode_image(TJContext *ctx, unsigned char *buf, unsigned long len, in
   DecodeRes res;
   bzero(&res, sizeof(DecodeRes));
 
-  tjDecompressHeader2(ctx->tj_dec, buf, len, &width, &height, &subsamp);
+  tjDecompressHeader2(ctx->tj_dec, (unsigned char*) buf, len, &width, &height, &subsamp);
   outbuf = (unsigned char*) malloc(width * height * 4);
-  tjDecompress2(ctx->tj_dec, buf, len, outbuf, width, 0, height, pixel_format, flags);
+  tjDecompress2(ctx->tj_dec, (unsigned char*) buf, len, outbuf, width, 0, height, pixel_format, flags);
   res.width = width;
   res.height = height;
   res.buf = outbuf;
@@ -70,13 +77,14 @@ DecodeRes decode_image(TJContext *ctx, unsigned char *buf, unsigned long len, in
 
 }
 
-void free_decoded_image(unsigned char *buf) {
+void free_decoded_image(void *buf) {
 
   free(buf);
 
 }
 
-DecodeYUVRes decode_image_to_yuv(TJContext *ctx, unsigned char *buf, unsigned long len, int flags) {
+// FIXME: error handling
+DecodeYUVRes decode_image_to_yuv(TJContext *ctx, char *buf, unsigned long len, int flags) {
 
   int width;
   int height;
@@ -86,10 +94,10 @@ DecodeYUVRes decode_image_to_yuv(TJContext *ctx, unsigned char *buf, unsigned lo
   DecodeYUVRes res;
   bzero(&res, sizeof(DecodeYUVRes));
 
-  tjDecompressHeader2(ctx->tj_dec, buf, len, &width, &height, &subsamp);
+  tjDecompressHeader2(ctx->tj_dec, (unsigned char*) buf, len, &width, &height, &subsamp);
   unsigned long outbuf_len = tjBufSizeYUV(width, height, subsamp);
   outbuf = (unsigned char*) malloc(outbuf_len);
-  tjDecompressToYUV(ctx->tj_dec, buf, len, outbuf, flags);
+  tjDecompressToYUV(ctx->tj_dec, (unsigned char*) buf, len, outbuf, flags);
   res.width = width;
   res.height = height;
   res.buf = outbuf;
@@ -100,7 +108,7 @@ DecodeYUVRes decode_image_to_yuv(TJContext *ctx, unsigned char *buf, unsigned lo
 
 }
 
-void free_decoded_yuv_image(unsigned char *buf) {
+void free_decoded_yuv_image(void *buf) {
 
   free(buf);
 
