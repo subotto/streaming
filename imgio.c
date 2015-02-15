@@ -136,7 +136,7 @@ void write_jpeg_frame(TJContext *ctx, FILE *fout, Image *image) {
 // FIXME: error handling
 void write_frame(TJContext *ctx, FILE *fout, Image *image) {
 
-  EncodeRes eres = encode_image(ctx, (unsigned long) image->buf, image->width, image->height, TJPF_BGRX, TJSAMP_444, 95, TJFLAG_ACCURATEDCT);
+  EncodeRes eres = encode_image(ctx, (unsigned long) image->buf, image->width, image->height, TJPF_BGRX, TJSAMP_420, 100, TJFLAG_ACCURATEDCT);
 
   image->jpeg_length = eres.len;
   image->jpeg_buf = eres.buf;

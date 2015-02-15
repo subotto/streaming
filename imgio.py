@@ -57,7 +57,7 @@ def tj_open_from_data(data, pixel_format=TJPF_BGRX):
 def tj_write_to_data(image, pixel_format=TJPF_BGRX):
     height, width, channels = image.shape
     #print >> sys.stderr, image.__array_interface__
-    res = pytj.encode_image(tj_ctx, image.__array_interface__['data'][0], width, height, pixel_format, pytj.TJSAMP_444, 95, pytj.TJFLAG_ACCURATEDCT)
+    res = pytj.encode_image(tj_ctx, image.__array_interface__['data'][0], width, height, pixel_format, pytj.TJSAMP_420, 100, pytj.TJFLAG_ACCURATEDCT)
     as_str = pytj.cdata(res.buf, res.len)
     pytj.free_encoded_image(res.buf)
 
