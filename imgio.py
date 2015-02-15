@@ -44,6 +44,11 @@ import pytj
 from pytj import TJPF_RGBX, TJPF_BGRX
 tj_ctx = pytj.create_tjcontext()
 
+def image_from_string(data, height, width):
+    as_str = pytj.cdata(data, width * height * 4)
+    image = numpy.ndarray(shape=(height, width, 4), dtype='uint8', buffer=as_str)
+    return numpy.copy(image)
+
 def tj_open_from_data(data, pixel_format=TJPF_BGRX):
     res = pytj.decode_image(tj_ctx, data, len(data), pixel_format, pytj.TJFLAG_ACCURATEDCT)
     as_str = pytj.cdata(res.buf, res.width * res.height * 4)
