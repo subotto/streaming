@@ -185,7 +185,7 @@ def read_raw_frame(fin, width, height):
     image = numpy.copy(image)
     return image
 
-def read_blob_from_phantom(fin):
+def read_base64_blob_from_phantom(fin):
     length = int(fin.readline())
     data = fin.read(length)
     newline = fin.read(1)

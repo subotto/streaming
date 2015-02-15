@@ -7,6 +7,8 @@ import json
 import os
 import math
 import random
+import struct
+import base64
 
 MAX_QUERY_STRING_LEN = 1024
 
@@ -82,6 +84,7 @@ class Application:
         # Send response
         obj_response = {
             'timestamp': now,
+            'packed_timestamp': base64.b64encode(struct.pack("d", now)),
             'red_score': red_score,
             'blue_score': blue_score,
             'red_team': red_team,
