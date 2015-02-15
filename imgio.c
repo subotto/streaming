@@ -179,7 +179,7 @@ void get_cairo_context(Image *image) {
 // documentation for tjEncodeYUV2()) to the one understood by SDL
 // (planes fully unpacked and with specified stride, which is called
 // pitch)
-void copy_yuv_to_planes(Image *image, Uint16 *pitches, Uint8 **pixels, int swap_chroma) {
+void copy_yuv_to_planes(const Image *image, Uint16 *pitches, Uint8 **pixels, int swap_chroma) {
 
   // Detect which kind of subsampling we have
   int hsub = (image->subsamp == TJSAMP_420 || image->subsamp == TJSAMP_422);
