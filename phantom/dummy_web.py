@@ -81,6 +81,7 @@ class Application:
 
         # Send response
         obj_response = {
+            'timestamp': now,
             'red_score': red_score,
             'blue_score': blue_score,
             'red_team': red_team,
