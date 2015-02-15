@@ -53,6 +53,7 @@ int main(int argc, char *argv[]) {
     SDL_LockYUVOverlay(bmp);
     copy_yuv_to_planes(image, bmp->pitches, bmp->pixels, 1);
     SDL_UnlockYUVOverlay(bmp);
+    free_image(image);
 
     rect.x = 0;
     rect.y = 0;
