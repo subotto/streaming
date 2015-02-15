@@ -85,6 +85,7 @@ class Application:
         obj_response = {
             'timestamp': now,
             'packed_timestamp': base64.b64encode(struct.pack("d", now)),
+            'match_clock': now - self.start_time,
             'red_score': red_score,
             'blue_score': blue_score,
             'red_team': red_team,
