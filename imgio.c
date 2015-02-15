@@ -58,10 +58,17 @@ Image *read_jpeg_frame(TJContext *ctx, FILE *fin) {
   //fprintf(stderr, "read length: %d\n", length);
   unsigned char *buf = (unsigned char*) malloc(length);
   if (buf == NULL) return NULL;
-  res = fread(buf, 1, length, fin);
-  if (res != length) {
-    free(buf);
-    return NULL;
+
+  int remaining = length;
+  unsigned char *read_buf = buf;
+  while (remaining > 0) {
+    res = fread(read_buf, 1, remaining, fin);
+    if (res == 0) {
+      free(buf);
+      return NULL;
+    }
+    remaining -= res;
+    read_buf += res;
   }
 
   Image *image = (Image*) malloc(sizeof(Image));
@@ -98,10 +105,10 @@ Image *read_frame(TJContext *ctx, FILE *fin) {
 
 }
 
-// FIXME: error handling
 Image *read_frame_to_yuv(TJContext *ctx, FILE *fin) {
 
   Image *image = read_jpeg_frame(ctx, fin);
+  if (image == NULL) return NULL;
 
   DecodeYUVRes dres = decode_image_to_yuv(ctx, (char*) image->jpeg_buf, image->jpeg_length, TJFLAG_ACCURATEDCT);
   image->width = dres.width;
@@ -119,34 +126,45 @@ Image *read_frame_to_yuv(TJContext *ctx, FILE *fin) {
 
 }
 
-// FIXME: error handling
-void write_jpeg_frame(TJContext *ctx, FILE *fout, Image *image) {
+int write_jpeg_frame(TJContext *ctx, FILE *fout, Image *image) {
 
   uint32_t length32 = htonl((uint32_t) image->jpeg_length);
   size_t res;
   res = fwrite(&image->timestamp, 8, 1, fout);
-  assert(res == 1);
+  if (res != 1) return 0;
   res = fwrite(&length32, 4, 1, fout);
-  assert(res == 1);
-  res = fwrite(image->jpeg_buf, 1, image->jpeg_length, fout);
-  assert(res == image->jpeg_length);
+  if (res != 1) return 0;
+  int remaining = image->jpeg_length;
+  unsigned char *write_buf = image->jpeg_buf;
+  while (remaining > 0) {
+    res = fwrite(write_buf, 1, remaining, fout);
+    if (res == 0) {
+      return 0;
+    }
+    remaining -= res;
+    write_buf += res;
+  }
+
+  return 1;
 
 }
 
-// FIXME: error handling
-void write_frame(TJContext *ctx, FILE *fout, Image *image) {
+int write_frame(TJContext *ctx, FILE *fout, Image *image) {
 
   EncodeRes eres = encode_image(ctx, (unsigned long) image->buf, image->width, image->height, TJPF_BGRX, TJSAMP_420, 100, TJFLAG_ACCURATEDCT);
 
   image->jpeg_length = eres.len;
   image->jpeg_buf = eres.buf;
 
-  write_jpeg_frame(ctx, fout, image);
+  int res;
+  res = write_jpeg_frame(ctx, fout, image);
 
   // We clear away JPEG buffer in order to reclaim memory and avoid
   // confusion
   free_encoded_image(image->jpeg_buf);
   image->jpeg_buf = NULL;
+
+  return res;
 
 }
 
