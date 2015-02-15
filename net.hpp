@@ -37,7 +37,7 @@ public:
   ImageMultiClient(const vector< ImageServerConf > &servers, bool decode=true);
   ~ImageMultiClient();
   void worker(int shard);
-  vector< const Image* > advance_to_timestamp(double timestamp, bool empty=false);
+  vector< const Image* > advance_to_timestamp(double timestamp, bool block=false, bool empty=false);
   vector< const Image* > advance_to_stream(int shard, bool block=false, bool empty=false);
   vector< tuple< double, int, int > > get_status();
   void print_status();
