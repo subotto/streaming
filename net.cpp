@@ -15,8 +15,8 @@ ImageServerConf::ImageServerConf(string host, string port, double timeout)
 
 }
 
-ImageMultiClient::ImageMultiClient(const vector< ImageServerConf > &servers)
-  : servers(servers), running(true) {
+ImageMultiClient::ImageMultiClient(const vector< ImageServerConf > &servers, bool decode)
+  : servers(servers), decode(decode), running(true) {
 
   // Allocate queues and start threads; threads vector is initially
   // resized in order to be sure that no threads will access it while
@@ -24,7 +24,7 @@ ImageMultiClient::ImageMultiClient(const vector< ImageServerConf > &servers)
   this->queues.resize(servers.size());
   this->mem_usage.resize(servers.size());
   this->threads.resize(servers.size());
-  for (int i = 0; i < servers.size(); i++) {
+  for (unsigned int i = 0; i < servers.size(); i++) {
     this->threads[i] = thread(&ImageMultiClient::worker, this, i);
   }
 
@@ -80,7 +80,6 @@ void ImageMultiClient::worker(int shard) {
   }
 
   // Create the C-style file
-  fin;
   fin = fdopen(sd, "r");
   if (fin == NULL) {
     fprintf(stderr, "Worker %d, could not open file from socket: %s", shard, strerror(errno));
@@ -89,7 +88,9 @@ void ImageMultiClient::worker(int shard) {
 
   while (this->running) {
     // Take an image
-    Image *image = read_frame(ctx, fin);
+    Image *image;
+    if (this->decode) image = read_frame(ctx, fin);
+    else image = read_jpeg_frame(ctx, fin);
     if (image == NULL) {
       fprintf(stderr, "Worker %d, could not read image (socket was probably closed)", shard);
       goto cleanup;
@@ -194,7 +195,7 @@ vector< tuple< double, int, int > > ImageMultiClient::get_status() {
   double now = duration_cast< duration< double > >(system_clock::now().time_since_epoch()).count();
 
   vector< tuple< double, int, int > > ret;
-  for (int i = 0; i < this->queues.size(); i++) {
+  for (unsigned int i = 0; i < this->queues.size(); i++) {
     auto &queue = this->queues[i];
     double time_delta;
     if (queue.size() > 0) time_delta = now - (*(--queue.end()))->timestamp;

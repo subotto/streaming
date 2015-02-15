@@ -22,4 +22,4 @@ sdl_sink: _pytj.c _pytj.h imgio.c imgio.h sdl_sink.c
 	gcc -o sdl_sink _pytj.c imgio.c sdl_sink.c -lturbojpeg -g -O2 `pkg-config --cflags --libs cairo` `sdl-config --cflags --libs`
 
 test_client: net.cpp net.hpp _pytj.c _pytj.h imgio.c imgio.h test_client.cpp
-	g++ -o test_client net.cpp _pytj.c imgio.c test_client.cpp -std=c++11 -lturbojpeg -g -O2 `pkg-config --cflags --libs cairo` `sdl-config --cflags --libs` -lpthread
+	g++ -Wall -o test_client net.cpp _pytj.c imgio.c test_client.cpp -std=c++11 -lturbojpeg -g -O2 `pkg-config --cflags --libs cairo` `sdl-config --cflags --libs` -lpthread

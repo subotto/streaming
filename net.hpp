@@ -30,10 +30,11 @@ private:
   mutex queues_mutex;
   recursive_mutex advance_mutex;
   condition_variable queues_condition;
+  bool decode;
   volatile bool running;
 
 public:
-  ImageMultiClient(const vector< ImageServerConf > &servers);
+  ImageMultiClient(const vector< ImageServerConf > &servers, bool decode=true);
   ~ImageMultiClient();
   void worker(int shard);
   vector< const Image* > advance_to_timestamp(double timestamp, bool empty=false);
