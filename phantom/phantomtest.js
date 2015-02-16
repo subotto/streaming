@@ -12,7 +12,7 @@ function output_image(page, filename, format) {
         outfile.close();
     } else {
         var outfile = fs.open(filename, 'w');
-        var imdata = page.renderBase64(format);
+        var imdata = page.render('test.png',format);
         var length = imdata.length;
         outfile.writeLine(length);
         outfile.writeLine(imdata);
@@ -29,7 +29,7 @@ page.open('html/animation_test.html', function() {
         t++;
 	      //system.stderr.write(' '+t++);
 	      //if (t>400) {phantom.exit();}
-    }, 10);
+    }, 3000);
 
     interval2 = setInterval(function(){
         system.stderr.write(' '+t);
