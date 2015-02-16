@@ -34,12 +34,16 @@ function output_image(page, filename, format) {
     }
     else if (format == "raw") {
         var outfile = fs.open(filename, 'w');
-        var timestamp = "2GMFP4k41UE=";
-        outfile.write(atob(timestamp));
-        var lenght = 4 * page.viewportSize.width * page.viewportSize.height;
-        outfile.write(pack_uint32(lenght));
+        //var timestamp = "2GMFP4k41UE=";
+        //outfile.write(atob(timestamp));
+        var timestamp = 123126412.12783871523;
+        outfile.writeLine(timestamp);
+        var length = 4 * page.viewportSize.width * page.viewportSize.height;
+        //outfile.write(pack_uint32(length));
+        outfile.writeLine(length);
         outfile.close();
         page.render(filename, {format: 'raw'});
+
     }
     else {
         system.stderr.writeLine("ERROR: Format not supported.");
@@ -48,9 +52,9 @@ function output_image(page, filename, format) {
 
 page.viewportSize = { width: 1280, height: 720 };
 page.open('images/soccer.svg', function() {
-    //interval = setInterval(function(){
+    interval = setInterval(function(){
         output_image(page, '/dev/stdout', 'raw');
         system.stderr.writeLine("OK.");
-    //}, 10);
+    }, 10);
 });
 
