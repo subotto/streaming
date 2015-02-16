@@ -96,7 +96,8 @@ class Application:
         json_response = self.encoder.encode(obj_response).encode('utf-8')
         status = '200 OK'
         response_headers = [('Content-Type', 'application/json; charset=utf-8'),
-                            ('Content-Length', str(len(json_response)))]
+                            ('Content-Length', str(len(json_response))),
+                            ('Access-Control-Allow-Origin', '*')]
         start_response(status, response_headers)
         return [json_response]
 

@@ -50,7 +50,6 @@ page.viewportSize = { width: 1280, height: 720 };
 page.open('images/soccer.svg', function() {
     //interval = setInterval(function(){
         output_image(page, '/dev/stdout', 'raw');
-        //page.render('test.raw', {format: 'raw'});
         system.stderr.writeLine("OK.");
     //}, 10);
 });
