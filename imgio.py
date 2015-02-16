@@ -44,8 +44,9 @@ import pytj
 from pytj import TJPF_RGBX, TJPF_BGRX
 tj_ctx = pytj.create_tjcontext()
 
-def image_from_string(data, height, width):
-    as_str = pytj.cdata(data, width * height * 4)
+def image_from_string(data, width, height):
+    #as_str = pytj.cdata(data, width * height * 4)
+    as_str = data
     image = numpy.ndarray(shape=(height, width, 4), dtype='uint8', buffer=as_str)
     return numpy.copy(image)
 
@@ -189,6 +190,19 @@ def read_raw_frame(fin, width, height):
     image = numpy.ndarray(shape=(height, width, 4), dtype='uint8', buffer=imdata)
     image = numpy.copy(image)
     return image
+
+def read_funny_blob_from_phantom(fin):
+    timestamp_line = fin.readline(1024)
+    if len(timestamp_line) > 1023:
+        raise Exception("Lost synchronization with file")
+    length_line = fin.readline(1024)
+    if len(length_line) > 1023:
+        raise Exception("Lost synchronization with file")
+    timestamp = float(timestamp_line.strip())
+    length = int(length_line.strip())
+    blob = fin.read(length)
+
+    return blob, timestamp
 
 def read_base64_blob_from_phantom(fin):
     length = int(fin.readline())

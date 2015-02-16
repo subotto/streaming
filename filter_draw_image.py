@@ -10,7 +10,7 @@ import math
 
 import base64
 
-from imgio import read_frame, write_frame, get_cairo_context, get_cairo_image, read_raw_frame, swap_channels, read_base64_blob_from_phantom, cv2_open_from_data, image_from_string
+from imgio import read_frame, write_frame, get_cairo_context, get_cairo_image, read_raw_frame, swap_channels, read_base64_blob_from_phantom, cv2_open_from_data, image_from_string, read_funny_blob_from_phantom
 
 #sheep_svg = rsvg.Handle("pecora.svg")
 fweb = open("webpage_fifo", "r")
@@ -19,9 +19,9 @@ def edit_frame(ctx, size, timestamp):
     global fweb
     #image_to_draw = swap_channels(read_raw_frame(fweb, 1280, 720))
     #image_to_draw = cv2_open_from_data(base64.b64decode(read_base64_blob_from_phantom(fweb)))
-    imdata, timestamp = read_jpeg_frame(fweb)
+    imdata, timestamp = read_funny_blob_from_phantom(fweb)
     assert len(imdata) == 4 * size[0] * size[1], "Image from Phantom has wrong size"
-    image_to_draw = image_from_string(imdata)
+    image_to_draw = image_from_string(imdata, size[0], size[1])
     _, web_render = get_cairo_image(swap_channels(image_to_draw))
     ctx.save()
     ctx.set_source_surface(web_render)

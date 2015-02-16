@@ -18,7 +18,10 @@ def main():
         content = fin.read()
 
     num = 0
-    fout = WritingThread(sys.stdout)
+    if fps > 0.0:
+        fout = WritingThread(sys.stdout)
+    else:
+        fout = sys.stdout
     try:
         while True:
             before = time.time()
