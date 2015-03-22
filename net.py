@@ -17,6 +17,7 @@ QUEUE_MAXSIZE = 5 * 30
 
 def clear_line():
     sys.stderr.write('\r\033[2K')
+    #sys.stdout.write('\r%s' % (curses.tparm(curses.tigetstr("el"))))
 
 
 class ImageSocketServerHandler(SocketServer.BaseRequestHandler):
