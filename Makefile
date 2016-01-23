@@ -1,7 +1,7 @@
 
 CFLAGS = -lturbojpeg -g -O2 `pkg-config --cflags --libs cairo` `sdl-config --cflags --libs`
 
-all: test_filter sdl_sink _pytj.so test_client multimonitor
+all: test_filter sdl_sink _pytj.so test_client multimonitor v4l2_source
 
 _pytj.o: _pytj.c _pytj.h Makefile
 	gcc -c -fpic _pytj.c
@@ -26,3 +26,6 @@ test_client: net.cpp net.hpp _pytj.c _pytj.h imgio.c imgio.h test_client.cpp Mak
 
 multimonitor: net.cpp net.hpp _pytj.c _pytj.h imgio.c imgio.h multimonitor.cpp Makefile
 	g++ -Wall -pedantic -o multimonitor net.cpp _pytj.c imgio.c multimonitor.cpp -std=c++11 -lturbojpeg -g -O2 `pkg-config --cflags --libs cairo` `sdl-config --cflags --libs` -lpthread
+
+v4l2_source: v4l2_source.c imgio.c imgio.h _pytj.c _pytj.h Makefile
+	gcc -Wall -pedantic -o v4l2_source v4l2_source.c imgio.c _pytj.c -std=c11 -lturbojpeg -g -O2 `pkg-config --cflags --libs cairo` `sdl-config --cflags --libs`

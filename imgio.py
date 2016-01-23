@@ -26,15 +26,19 @@ def jpeg_write_to_data(image):
     return jpeg.compress(*image)
 
 import numpy
-import cv
-import cv2
 
-def cv2_open_from_data(data):
-    return cv2.imdecode(numpy.frombuffer(data, dtype='uint8'), -1)
+try:
+    import cv
+    import cv2
+except ImportError:
+    pass
+else:
+    def cv2_open_from_data(data):
+        return cv2.imdecode(numpy.frombuffer(data, dtype='uint8'), -1)
 
-def cv2_write_to_data(image):
-    #params = [cv.CV_IMWRITE_JPEG_QUALITY, 50, cv.CV_IMWRITE_PNG_COMPRESSION, 0]
-    return cv2.imencode("image.jpeg", image)[1].data
+    def cv2_write_to_data(image):
+        #params = [cv.CV_IMWRITE_JPEG_QUALITY, 50, cv.CV_IMWRITE_PNG_COMPRESSION, 0]
+        return cv2.imencode("image.jpeg", image)[1].data
 
 # The PyTJ interface is terrible, but it is the best I could come up
 # with, considered that I don't want to spend on it more time then
