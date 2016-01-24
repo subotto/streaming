@@ -8,7 +8,7 @@
 
 #include <cairo.h>
 
-#include "_pytj.h"
+#include "pytj.h"
 
 typedef struct {
   unsigned char *buf;

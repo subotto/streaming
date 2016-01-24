@@ -5,11 +5,11 @@
 
 %{
 
-#include "_pytj.h"
+#include "pytj.h"
 
 %}
 
 %thread;
-%include "_pytj.h"
+%include "pytj.h"
 %nothread;
 

@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <strings.h>
 
-#include "_pytj.h"
+#include "pytj.h"
 
 // FIXME: error handling
 TJContext *create_tjcontext(void) {
