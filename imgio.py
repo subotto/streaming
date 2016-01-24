@@ -77,6 +77,9 @@ def tj_write_to_data(image, pixel_format=TJPF_BGRX):
 #jpeg_interface = [cv2_open_from_data, cv2_write_to_data]
 jpeg_interface = [tj_open_from_data, tj_write_to_data]
 
+decode_jpeg_data = jpeg_interface[0]
+encode_jpeg_data = jpeg_interface[1]
+
 def read_jpeg_frame(fin):
     timestamp_tag = fin.read(8)
     length_tag = fin.read(4)
