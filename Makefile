@@ -10,10 +10,10 @@ pytj_wrap.c: pytj.i pytj.h Makefile
 	swig -python pytj.i
 
 pytj_wrap.o: pytj_wrap.c pytj.h Makefile
-	gcc -c -fpic pytj_wrap.c `python-config --cflags`
+	gcc -c -fpic pytj_wrap.c `python2-config --cflags`
 
 _pytj.so: pytj.o pytj_wrap.o Makefile
-	gcc -shared -o _pytj.so `python-config --libs` -lturbojpeg pytj.o pytj_wrap.o
+	gcc -shared -o _pytj.so `python2-config --libs` -lturbojpeg pytj.o pytj_wrap.o
 
 test_filter: pytj.c pytj.h imgio.c imgio.h test_filter.c Makefile
 	gcc -Wall -pedantic -o test_filter pytj.c imgio.c test_filter.c -std=c99 -lturbojpeg -g -O2 `pkg-config --cflags --libs cairo` `sdl-config --cflags --libs`

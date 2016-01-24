@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 
 import sys
@@ -33,6 +33,8 @@ def main():
             # of the surfarray interface, which in theory should be
             # the best way to do these things)
             image, timestamp = read_frame(sys.stdin, pixel_format=TJPF_RGBX)
+            if image is None:
+                break
             #print type(image)
             image_size = image.shape[1], image.shape[0]
             #print image_size

@@ -82,6 +82,8 @@ encode_jpeg_data = jpeg_interface[1]
 
 def read_jpeg_frame(fin):
     timestamp_tag = fin.read(8)
+    if len(timestamp_tag) == 0:
+        return None, None
     length_tag = fin.read(4)
     timestamp, = struct.unpack("d", timestamp_tag)
     length, = struct.unpack("!I", length_tag)
@@ -91,6 +93,8 @@ def read_jpeg_frame(fin):
 
 def read_frame(fin, **kwargs):
     imdata, timestamp = read_jpeg_frame(fin)
+    if imdata is None:
+        return None, None
     image = jpeg_interface[0](imdata, **kwargs)
 
     return image, timestamp
