@@ -13,9 +13,13 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
+#include <stdint.h>
 #include <string.h>
 #include <assert.h>
 #include <time.h>
+#include <unistd.h>
+#include <signal.h>
 
 #include <getopt.h>             /* getopt_long() */
 
@@ -27,6 +31,9 @@
 #include <sys/time.h>
 #include <sys/mman.h>
 #include <sys/ioctl.h>
+#include <sys/wait.h>
+
+#include <dirent.h>
 
 #include <linux/videodev2.h>
 
@@ -45,6 +52,9 @@ struct buffer {
         size_t  length;
 };
 
+#define FULLNAME_MAX_LEN 1024
+#define PRODUCT_KEY "PRODUCT="
+
 static char            *dev_name;
 static enum io_method   io = IO_METHOD_MMAP;
 static int              fd = -1;
@@ -53,6 +63,12 @@ static unsigned int     n_buffers;
 static int              out_buf;
 static int              force_format;
 static int              frame_count = -1;
+
+static char dev_name_buf[FULLNAME_MAX_LEN];
+static long int vendor = -1;
+static long int product = -1;
+
+static pid_t child_pid;
 
 static void errno_exit(const char *s)
 {
@@ -607,22 +623,26 @@ static void usage(FILE *fp, int argc, char **argv)
                  "Version 1.3\n"
                  "Options:\n"
                  "-d | --device name   Video device name [%s]\n"
+                 "-a | --auto          Auto re-spawn\n"
                  "-h | --help          Print this message\n"
                  "-m | --mmap          Use memory mapped buffers [default]\n"
                  "-r | --read          Use read() calls\n"
                  "-u | --userp         Use application allocated buffers\n"
-                //"-o | --output        Outputs stream to stdout\n"
+                 //"-o | --output        Outputs stream to stdout\n"
                  "-f | --format        Force format to 640x480 MJPEG\n"
                  "-c | --count         Number of frames to grab [%i], -1 for no limit\n"
+                 "-V | --vendor        Hex vendor ID of USB device\n"
+                 "-P | --product       Hex product ID of USB device\n"
                  "",
                  argv[0], dev_name, frame_count);
 }
 
-static const char short_options[] = "d:hmruofc:";
+static const char short_options[] = "d:ahmruofc:P:V:";
 
 static const struct option
 long_options[] = {
         { "device", required_argument, NULL, 'd' },
+        { "auto",   no_argument,       NULL, 'a' },
         { "help",   no_argument,       NULL, 'h' },
         { "mmap",   no_argument,       NULL, 'm' },
         { "read",   no_argument,       NULL, 'r' },
@@ -630,12 +650,92 @@ long_options[] = {
         { "output", no_argument,       NULL, 'o' },
         { "format", no_argument,       NULL, 'f' },
         { "count",  required_argument, NULL, 'c' },
+        { "vendor", required_argument, NULL, 'V' },
+        { "product", required_argument, NULL, 'P' },
         { 0, 0, 0, 0 }
 };
 
+int find_camera(int vendor, int product) {
+
+  char fullname[FULLNAME_MAX_LEN];
+  int i, ret = -1;
+  for (i = 0; ret < 0; i++) {
+    snprintf(fullname, FULLNAME_MAX_LEN, "/sys/class/video4linux/video%d/device/uevent", i);
+    FILE *fdev = fopen(fullname, "r");
+    if (!fdev) {
+      break;
+    }
+    char *line = NULL;
+    size_t line_len = 0;
+    while (getline(&line, &line_len, fdev) > 0) {
+      if (strncmp(line, PRODUCT_KEY, strlen(PRODUCT_KEY)) == 0) {
+        char *value = line + strlen(PRODUCT_KEY);
+        char *tmp = NULL;
+        char *vendor_str = strtok_r(value, "/", &tmp);
+        char *product_str = strtok_r(NULL, "/", &tmp);
+        long int vendor_num = strtol(vendor_str, NULL, 16);
+        long int product_num = strtol(product_str, NULL, 16);
+        if (vendor_num == vendor && product_num == product) {
+          ret = i;
+          break;
+        }
+      }
+    }
+    free(line);
+    fclose(fdev);
+  }
+
+  return ret;
+
+}
+
+void life_cycle() {
+
+  fprintf(stderr, "Beginning life cycle\n");
+
+        if (!dev_name) {
+          if (vendor >= 0 || product >= 0) {
+            if (vendor < 0 || product < 0) {
+              err("Either give both vendor and product ID or none");
+            }
+            int dev_id = find_camera(vendor, product);
+            if (dev_id >= 0) {
+              snprintf(dev_name_buf, FULLNAME_MAX_LEN, "/dev/video%d", dev_id);
+              dev_name = &dev_name_buf[0];
+            } else {
+              err("Could not find device");
+            }
+          } else {
+            dev_name = "/dev/video0";
+          }
+        }
+        fprintf(stderr, "Using device %s\n", dev_name);
+
+        open_device();
+        init_device();
+        start_capturing();
+        mainloop();
+        stop_capturing();
+        uninit_device();
+        close_device();
+
+  fprintf(stderr, "Finishing life cycle\n");
+
+}
+
+void terminate_child() {
+
+  if (child_pid > 0) {
+    kill(child_pid, SIGTERM);
+  }
+
+}
+
 int main(int argc, char **argv)
 {
-        dev_name = "/dev/video0";
+        dev_name = NULL;
+        char *endptr;
+        bool auto_respawn = false;
 
         for (;;) {
                 int idx;
@@ -654,6 +754,10 @@ int main(int argc, char **argv)
                 case 'd':
                         dev_name = optarg;
                         break;
+
+                case 'a':
+                  auto_respawn = true;
+                  break;
 
                 case 'h':
                         usage(stdout, argc, argv);
@@ -686,19 +790,54 @@ int main(int argc, char **argv)
                                 errno_exit(optarg);
                         break;
 
+                case 'V':
+                  errno = 0;
+                  vendor = strtol(optarg, &endptr, 16);
+                  if (errno) {
+                    errno_exit(optarg);
+                  }
+                  if (*endptr) {
+                    err("Wrong vendor ID");
+                  }
+                  break;
+
+                case 'P':
+                  errno = 0;
+                  product = strtol(optarg, &endptr, 16);
+                  if (errno) {
+                    errno_exit(optarg);
+                  }
+                  if (*endptr) {
+                    err("Wrong product ID");
+                  }
+                  break;
+
                 default:
                         usage(stderr, argc, argv);
                         exit(EXIT_FAILURE);
                 }
         }
 
-        open_device();
-        init_device();
-        start_capturing();
-        mainloop();
-        stop_capturing();
-        uninit_device();
-        close_device();
-        fprintf(stderr, "\n");
+        if (!auto_respawn) {
+          life_cycle();
+        } else {
+          atexit(terminate_child);
+          while (true) {
+            fprintf(stderr, "Respawning\n");
+            child_pid = fork();
+            if (child_pid < 0) {
+              errno_exit("fork");
+            } else if (child_pid == 0) {
+              life_cycle();
+              exit(0);
+            } else {
+              waitpid(-1, NULL, 0);
+              child_pid = -1;
+              // Sleep a bit to avoid respawning too quickly
+              sleep(1);
+            }
+          }
+        }
+
         return 0;
 }
