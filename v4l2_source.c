@@ -823,6 +823,7 @@ int main(int argc, char **argv)
         } else {
           atexit(terminate_child);
           while (true) {
+            system("date 1>&2");
             fprintf(stderr, "Respawning\n");
             child_pid = fork();
             if (child_pid < 0) {
