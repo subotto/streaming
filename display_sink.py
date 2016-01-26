@@ -17,6 +17,7 @@ def main():
     surf = pygame.display.set_mode(size, pygame.DOUBLEBUF, 32)
 
     num = 0
+    image, timestamp = read_frame(sys.stdin, pixel_format=TJPF_RGBX)
     try:
         while True:
             # Process events
@@ -28,13 +29,14 @@ def main():
                 elif event.type == pygame.locals.KEYDOWN:
                     if event.key == pygame.locals.K_ESCAPE:
                         pygame.event.post(pygame.event.Event(pygame.locals.QUIT))
+                    elif event.unicode == u'.':
 
             # Read image and show it (TODO - I couldn't make any sense
             # of the surfarray interface, which in theory should be
             # the best way to do these things)
-            image, timestamp = read_frame(sys.stdin, pixel_format=TJPF_RGBX)
-            if image is None:
-                break
+                        image, timestamp = read_frame(sys.stdin, pixel_format=TJPF_RGBX)
+                        if image is None:
+                            break
             #print type(image)
             image_size = image.shape[1], image.shape[0]
             #print image_size
