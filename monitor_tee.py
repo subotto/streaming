@@ -12,6 +12,7 @@ import socket
 import SocketServer
 import Queue
 import time
+import traceback
 
 from imgio import read_jpeg_frame, write_jpeg_frame, decode_jpeg_data, TJPF_RGBX
 
@@ -125,12 +126,16 @@ def main():
             # of the surfarray interface, which in theory should be
             # the best way to do these things)
             if last_frame is not None:
-                #print >> sys.stderr, "Frame received"
-                imdata, timestamp = last_frame
-                image = decode_jpeg_data(imdata, pixel_format=TJPF_RGBX)
-                image_size = image.shape[1], image.shape[0]
-                pygame_image = pygame.image.fromstring(image.tostring(), image_size, 'RGBX')
-                surf.blit(pygame_image, (0, 0))
+                try:
+                    #print >> sys.stderr, "Frame received"
+                    imdata, timestamp = last_frame
+                    image = decode_jpeg_data(imdata, pixel_format=TJPF_RGBX)
+                    image_size = image.shape[1], image.shape[0]
+                    pygame_image = pygame.image.fromstring(image.tostring(), image_size, 'RGBX')
+                    surf.blit(pygame_image, (0, 0))
+                except:
+                    print >> sys.stderr, "Exception while showing the JPEG frame"
+                    traceback.print_exc(file=sys.stderr)
 
             pygame.display.flip()
             clock.tick(15)
