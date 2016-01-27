@@ -6,8 +6,9 @@ import struct
 import pygame
 import pygame.locals
 import numpy
+import datetime
 
-from imgio import read_frame, read_jpeg_frame, TJPF_RGBX
+from imgio import decode_jpeg_data, read_jpeg_frame, TJPF_RGBX
 
 MODE_STOP = 0
 MODE_SINGLE = 1
@@ -16,6 +17,8 @@ MODE_PLAYING_BACKWARD = 3
 
 def goto(new_num):
     global num, fin, frame_pos
+    if num == new_num:
+        return
     if new_num < 0:
         new_num = 0
     if new_num < len(frame_pos):
@@ -55,6 +58,10 @@ def main():
 
     clock = pygame.time.Clock()
     image = None
+    imdata = None
+    timestamp = None
+    font = pygame.font.Font(pygame.font.match_font('Bitstream Vera Sans'), 16)
+    skip = 1
 
     try:
         while True:
@@ -77,16 +84,41 @@ def main():
                         goto(num - 1)
 
                     elif event.unicode == u' ':
-                        mode = MODE_PLAYING
+                        if mode == MODE_PLAYING:
+                            mode = MODE_STOP
+                        else:
+                            mode = MODE_PLAYING
 
                     elif event.unicode == u'b':
-                        mode = MODE_PLAYING_BACKWARD
+                        if mode == MODE_PLAYING_BACKWARD:
+                            mode = MODE_STOP
+                        else:
+                            mode = MODE_PLAYING_BACKWARD
+
+                    elif event.unicode == u'n':
+                        skip = 1
+
+                    elif event.unicode == u'm':
+                        skip += 1
+
+                    elif event.unicode == u'b':
+                        skip = max(1, skip - 1)
+
+                    elif event.unicode == u'd':
+                        if imdata is not None:
+                            filename = datetime.datetime.now().strftime("frame-%Y%m%d-%H%M%S-%%f.jpeg") % (timestamp)
+                            print >> sys.stderr, "Dumping frame on %s" % (filename)
+                            fout = open(filename, 'w')
+                            fout.write(imdata)
+                            fout.close()
 
             if mode in [MODE_SINGLE, MODE_PLAYING, MODE_PLAYING_BACKWARD]:
-                image, timestamp = read_frame(fin, pixel_format=TJPF_RGBX)
-                if image is None:
+                imdata, timestamp = read_jpeg_frame(fin)
+                if imdata is None:
                     mode = MODE_STOP
+                    image = None
                 else:
+                    image = decode_jpeg_data(imdata, pixel_format=TJPF_RGBX)
                     num += 1
                     if seekable:
                         if num == len(frame_pos):
@@ -99,14 +131,19 @@ def main():
                     #print image_size
                     pygame_image = pygame.image.fromstring(image.tostring(), image_size, 'RGBX')
                     surf.blit(pygame_image, (0, 0))
+                    font_surf = font.render("Timestamp: %f" % (timestamp), True, pygame.Color(255, 255, 255), pygame.Color(0, 0, 0))
+                    surf.blit(font_surf, (0, 0))
                     pygame.display.flip()
 
                     if mode == MODE_SINGLE:
                         mode = MODE_STOP
                         goto(num - 1)
 
+                    if mode == MODE_PLAYING:
+                        goto(num - 1 + skip)
+
                     if mode == MODE_PLAYING_BACKWARD:
-                        goto(num - 2)
+                        goto(num - 1 - skip)
                         if num == 0:
                             mode = MODE_SINGLE
 

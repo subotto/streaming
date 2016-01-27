@@ -119,6 +119,7 @@ def main():
                             recording = True
                         else:
                             print >> sys.stderr, "Closing record file"
+                            fouts[-1].close()
                             del fouts[-1]
                             recording = False
 
