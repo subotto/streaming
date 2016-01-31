@@ -20,7 +20,7 @@ QUEUE_MAXSIZE = 100
 HOST = "localhost"
 PORT = 2204
 
-last_frame = None
+last_frame = None, None
 fin = None
 fouts = []
 finish = False
@@ -126,7 +126,7 @@ def main():
             # Read image and show it (TODO - I couldn't make any sense
             # of the surfarray interface, which in theory should be
             # the best way to do these things)
-            if last_frame is not None:
+            if last_frame[0] is not None:
                 try:
                     #print >> sys.stderr, "Frame received"
                     imdata, timestamp = last_frame
