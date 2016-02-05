@@ -7,6 +7,7 @@ import pygame
 import pygame.locals
 import numpy
 import datetime
+import tzlocal
 
 from imgio import decode_jpeg_data, read_jpeg_frame, TJPF_RGBX
 
@@ -131,8 +132,13 @@ def main():
                     #print image_size
                     pygame_image = pygame.image.fromstring(image.tostring(), image_size, 'RGBX')
                     surf.blit(pygame_image, (0, 0))
+                    writing_pos = (0, 0)
                     font_surf = font.render("Timestamp: %f" % (timestamp), True, pygame.Color(255, 255, 255), pygame.Color(0, 0, 0))
-                    surf.blit(font_surf, (0, 0))
+                    surf.blit(font_surf, writing_pos)
+                    writing_pos = (writing_pos[0], writing_pos[1] + font_surf.get_size()[1])
+                    font_surf = font.render("Time: %s" % (datetime.datetime.fromtimestamp(timestamp, tz=tzlocal.get_localzone())), True, pygame.Color(255, 255, 255), pygame.Color(0, 0, 0))
+                    surf.blit(font_surf, writing_pos)
+                    writing_pos = (writing_pos[0], writing_pos[1] + font_surf.get_size()[1])
                     pygame.display.flip()
 
                     if mode == MODE_SINGLE:

@@ -1,6 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+import os
 import sys
 import struct
 import StringIO
@@ -90,6 +91,17 @@ def read_jpeg_frame(fin):
     imdata = fin.read(length)
 
     return imdata, timestamp
+
+def read_jpeg_header(fin):
+    timestamp_tag = fin.read(8)
+    if len(timestamp_tag) == 0:
+        return None, None
+    length_tag = fin.read(4)
+    timestamp, = struct.unpack("d", timestamp_tag)
+    length, = struct.unpack("!I", length_tag)
+    fin.seek(length, os.SEEK_CUR)
+
+    return length, timestamp
 
 def read_frame(fin, **kwargs):
     imdata, timestamp = read_jpeg_frame(fin)
