@@ -61,7 +61,7 @@ def main():
     image = None
     imdata = None
     timestamp = None
-    font = pygame.font.Font(pygame.font.match_font('Bitstream Vera Sans'), 16)
+    font = pygame.font.SysFont('Inconsolata', 16)
     skip = 1
 
     try:

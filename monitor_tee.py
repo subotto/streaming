@@ -13,10 +13,12 @@ import SocketServer
 import Queue
 import time
 import traceback
+import tzlocal
+import collections
 
 from imgio import read_jpeg_frame, write_jpeg_frame, decode_jpeg_data, TJPF_RGBX
 
-QUEUE_MAXSIZE = 100
+QUEUE_MAXSIZE = 500
 HOST = "localhost"
 PORT = 2204
 
@@ -26,6 +28,30 @@ fouts = []
 finish = False
 connections_lock = threading.Lock()
 connections = []
+
+class FPSEstimator:
+    def __init__(self, span):
+        self.queue = collections.deque()
+        self.length = 0
+        self.span = span
+        self.lock = threading.Lock()
+
+    def push_frame(self, timestamp):
+        with self.lock:
+            self.queue.append(timestamp)
+            self.length += 1
+
+            while self.queue[0] < timestamp - self.span:
+                self.queue.popleft()
+                self.length -= 1
+
+            return float(self.length) / self.span
+
+    def get_fps(self):
+        with self.lock:
+            return float(self.length) / self.span
+
+fps_est = FPSEstimator(5.0)
 
 # From https://docs.python.org/2/library/socketserver.html#asynchronous-mixins
 class Connection(SocketServer.BaseRequestHandler):
@@ -66,6 +92,8 @@ def copy():
     try:
         while not finish:
             imdata, timestamp = read_jpeg_frame(fin)
+            if timestamp is not None:
+                fps_est.push_frame(timestamp)
             last_frame = (imdata, timestamp)
             for fout in fouts:
                 write_jpeg_frame(fout, imdata, timestamp)
@@ -86,6 +114,7 @@ def main():
     pygame.display.set_caption(sys.argv[0])
     surf = pygame.display.set_mode(size, pygame.DOUBLEBUF, 32)
     clock = pygame.time.Clock()
+    font = pygame.font.SysFont('Inconsolata', 16)
 
     fin = sys.stdin
     fouts = []
@@ -98,6 +127,8 @@ def main():
     server = ThreadedTCPServer((HOST, PORT), Connection)
     server_thread = threading.Thread(target=server.serve_forever)
     server_thread.start()
+
+    filename = None
 
     try:
         while not finish:
@@ -118,6 +149,7 @@ def main():
                             fouts.append(fout)
                             recording = True
                         else:
+                            filename = None
                             print >> sys.stderr, "Closing record file"
                             fouts[-1].close()
                             del fouts[-1]
@@ -134,6 +166,22 @@ def main():
                     image_size = image.shape[1], image.shape[0]
                     pygame_image = pygame.image.fromstring(image.tostring(), image_size, 'RGBX')
                     surf.blit(pygame_image, (0, 0))
+                    writing_pos = (0, 0)
+                    font_surf = font.render("Recording on file %s" % (filename) if recording else "Not recording", True, pygame.Color(255, 0, 0) if recording else pygame.Color(255, 255, 255), pygame.Color(0, 0, 0))
+                    surf.blit(font_surf, writing_pos)
+                    writing_pos = (writing_pos[0], writing_pos[1] + font_surf.get_size()[1])
+                    font_surf = font.render("Timestamp: %f" % (timestamp), True, pygame.Color(255, 255, 255), pygame.Color(0, 0, 0))
+                    surf.blit(font_surf, writing_pos)
+                    writing_pos = (writing_pos[0], writing_pos[1] + font_surf.get_size()[1])
+                    font_surf = font.render("Time: %s" % (datetime.datetime.fromtimestamp(timestamp, tz=tzlocal.get_localzone())), True, pygame.Color(255, 255, 255), pygame.Color(0, 0, 0))
+                    surf.blit(font_surf, writing_pos)
+                    writing_pos = (writing_pos[0], writing_pos[1] + font_surf.get_size()[1])
+                    font_surf = font.render("Real FPS: %f" % (fps_est.get_fps()), True, pygame.Color(255, 255, 255), pygame.Color(0, 0, 0))
+                    surf.blit(font_surf, writing_pos)
+                    writing_pos = (writing_pos[0], writing_pos[1] + font_surf.get_size()[1])
+                    font_surf = font.render("Visualization FPS: %f" % (clock.get_fps()), True, pygame.Color(255, 255, 255), pygame.Color(0, 0, 0))
+                    surf.blit(font_surf, writing_pos)
+                    writing_pos = (writing_pos[0], writing_pos[1] + font_surf.get_size()[1])
                 except:
                     print >> sys.stderr, "Exception while showing the JPEG frame"
                     traceback.print_exc(file=sys.stderr)
