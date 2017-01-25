@@ -21,9 +21,12 @@ from imgio import read_jpeg_frame, write_jpeg_frame, decode_jpeg_data, TJPF_RGBX
 QUEUE_MAXSIZE = 500
 HOST = "localhost"
 PORT = 2204
+#CUT_EVERY = datetime.timedelta(seconds=10)
+CUT_EVERY = datetime.timedelta(minutes=3)
 
 last_frame = None, None
 fin = None
+fouts_lock = threading.Lock()
 fouts = []
 finish = False
 connections_lock = threading.Lock()
@@ -95,8 +98,9 @@ def copy():
             if timestamp is not None:
                 fps_est.push_frame(timestamp)
             last_frame = (imdata, timestamp)
-            for fout in fouts:
-                write_jpeg_frame(fout, imdata, timestamp)
+            with fouts_lock:
+                for fout in fouts:
+                    write_jpeg_frame(fout, imdata, timestamp)
             with connections_lock:
                 for connection in connections:
                     connection.enqueue_frame(imdata, timestamp)
@@ -128,11 +132,13 @@ def main():
     server_thread = threading.Thread(target=server.serve_forever)
     server_thread.start()
 
+    recording_began = None
     filename = None
 
     try:
         while not finish:
             # Process events
+            toggle_recording = False
             for event in pygame.event.get():
                 if event.type == pygame.locals.QUIT:
                     finish = True
@@ -142,18 +148,37 @@ def main():
                         pygame.event.post(pygame.event.Event(pygame.locals.QUIT))
 
                     if event.unicode == 'r':
-                        if not recording:
-                            filename = datetime.datetime.now().strftime("record-%Y%m%d-%H%M%S.gjpeg")
-                            print >> sys.stderr, "Recording on %s" % (filename)
-                            fout = open(filename, 'w')
-                            fouts.append(fout)
-                            recording = True
-                        else:
-                            filename = None
-                            print >> sys.stderr, "Closing record file"
-                            fouts[-1].close()
-                            del fouts[-1]
-                            recording = False
+                        toggle_recording = True
+
+            now = datetime.datetime.now()
+            stop_recording = False
+            start_recording = False
+            if toggle_recording:
+                if recording:
+                    stop_recording = True
+                else:
+                    start_recording = True
+
+            else:
+                if recording and now >= recording_began + CUT_EVERY:
+                    stop_recording = True
+                    start_recording = True
+
+            with fouts_lock:
+                if stop_recording:
+                    print >> sys.stderr, "Closing record file"
+                    fouts[-1].close()
+                    del fouts[-1]
+                    recording = False
+                    filename = None
+                    recording_began = None
+                if start_recording:
+                    recording_began = datetime.datetime.now()
+                    filename = recording_began.strftime("record-%Y%m%d-%H%M%S.gjpeg")
+                    print >> sys.stderr, "Recording on %s" % (filename)
+                    fout = open(filename, 'w')
+                    fouts.append(fout)
+                    recording = True
 
             # Read image and show it (TODO - I couldn't make any sense
             # of the surfarray interface, which in theory should be
