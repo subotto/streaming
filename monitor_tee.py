@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import sys
+import os
 import struct
 import pygame
 import pygame.locals
@@ -15,13 +16,21 @@ import time
 import traceback
 import tzlocal
 import collections
+import argparse
 
 from imgio import read_jpeg_frame, write_jpeg_frame, decode_jpeg_data, TJPF_RGBX
 
+parser = argparse.ArgumentParser()
+parser.add_argument('width', type=int, help='width of the video stream')
+parser.add_argument('height', type=int, help='height of the video stream')
+parser.add_argument('-p', '--port', type=int, default=2204, help='TCP port')
+parser.add_argument('-d', '--dir', default='./', help='TCP port')
+
+args = parser.parse_args()
+
 QUEUE_MAXSIZE = 500
 HOST = "localhost"
-PORT = 2204
-#CUT_EVERY = datetime.timedelta(seconds=10)
+PORT = args.port
 CUT_EVERY = datetime.timedelta(minutes=3)
 
 last_frame = None, None
@@ -113,7 +122,7 @@ def copy():
 def main():
     global fin, fouts, finish, last_frame
     # Init PyGame
-    size = map(int, sys.argv[1:3])
+    size = (args.width, args.height)
     pygame.init()
     pygame.display.set_caption(sys.argv[0])
     surf = pygame.display.set_mode(size, pygame.DOUBLEBUF, 32)
@@ -174,7 +183,7 @@ def main():
                     recording_began = None
                 if start_recording:
                     recording_began = datetime.datetime.now()
-                    filename = recording_began.strftime("record-%Y%m%d-%H%M%S.gjpeg")
+                    filename = recording_began.strftime(os.path.join(args.dir, "record-%Y%m%d-%H%M%S.gjpeg"))
                     print >> sys.stderr, "Recording on %s" % (filename)
                     fout = open(filename, 'w')
                     fouts.append(fout)
