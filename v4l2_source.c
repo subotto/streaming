@@ -128,7 +128,7 @@ static void process_image(const void *p, int size, const struct v4l2_buffer *buf
   //printf("%f %f %f\n", buf_time - monotonic_time, monotonic_time - wall_time, wall_time - buf_time);
 
   Image image = {0};
-  image.jpeg_buf = p;
+  image.jpeg_buf = (unsigned char*) p;
   image.jpeg_length = size;
   image.timestamp = corrected_time;
   res = write_jpeg_frame(NULL, stdout, &image);
