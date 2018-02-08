@@ -5,7 +5,7 @@ import sys
 import time
 import StringIO
 
-from imgio import write_jpeg_frame
+from imgio import write_jpeg_frame, read_jpeg_frame
 from net import WritingThread
 
 def main():
@@ -14,8 +14,9 @@ def main():
     if len(sys.argv) > 2:
         fps = float(sys.argv[2])
 
-    with open(filename) as fin:
-        content = fin.read()
+    #with open(filename) as fin:
+    #    content = fin.read()
+    fin = open(filename)
 
     num = 0
     if fps > 0.0:
@@ -25,7 +26,9 @@ def main():
     try:
         while True:
             before = time.time()
-            write_jpeg_frame(fout, content, time.time())
+            #timestamp = time.time()
+            content, timestamp = read_jpeg_frame(fin)
+            write_jpeg_frame(fout, content, timestamp)
             #print >> sys.stderr, num
             num += 1
             if fps != 0.0:
