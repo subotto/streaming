@@ -29,7 +29,7 @@ parser.add_argument('-d', '--dir', default='./', help='TCP port')
 args = parser.parse_args()
 
 QUEUE_MAXSIZE = 500
-HOST = "localhost"
+HOST = "0.0.0.0"
 PORT = args.port
 CUT_EVERY = datetime.timedelta(minutes=3)
 
